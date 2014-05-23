@@ -1,0 +1,36 @@
+parameters:
+    app_name:          google-drive-writer-bundle
+
+    database_driver:   pdo_mysql
+    database_host:     localhost
+    database_port:     ~
+    database_name:     symfony
+    database_user:     root
+    database_password: ~
+
+    mailer_transport:  smtp
+    mailer_host:       localhost
+    mailer_user:       ~
+    mailer_password:   ~
+
+    locale:            en
+    secret:            ThisTokenIsNotSoSecretChangeIt
+
+    storage_api.test.token:
+    storage_api.test.url: 'https://connection.keboola.com'
+    storage_api.url: 'http://connection-internal.keboola.com/'
+
+    shared_sapi.url: 'https://connection.keboola.com'
+    shared_sapi.token:
+
+    uploader:
+        aws-access-key:
+        aws-secret-key:
+        s3-upload-path:
+        bitly-login:
+        bitly-api-key: 
+
+    components:
+        wr-google-drive:
+            class:  Keboola\Google\DriveWriterBundle\GoogleDriveWriter
+            bundle: Keboola\Google\DriveWriterBundle\KeboolaGoogleDriveWriterBundle

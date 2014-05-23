@@ -1,0 +1,67 @@
+#keboola_google_drive_writer_homepage:
+#    pattern:  /hello/{name}
+#    defaults: { _controller: KeboolaGoogleDriveWriterBundle:Default:index }
+
+# OAuth
+keboola_google_drive_writer_oauth:
+    path: /oauth
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:Oauth:oauth }
+    methods:  [POST]
+
+keboola_google_drive_writer_oauth_callback:
+    path: /oauth-callback
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:Oauth:oauthCallback }
+
+# External Auth
+keboola_google_drive_writer_post_external_auth_link:
+    path: /external-link
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDrive:postExternalAuthLink }
+    methods:  [POST]
+
+keboola_google_drive_writer_external_auth:
+    path: /external-auth
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:Oauth:externalAuth }
+    methods:  [GET]
+
+keboola_google_drive_writer_external_auth_finish:
+    path: /external-finish
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:Oauth:externalAuthFinish }
+    methods:  [GET]
+
+# Configs
+keboola_google_drive_writer_get_configs:
+    path: /configs
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getConfigs }
+    methods:  [GET]
+
+keboola_google_drive_writer_post_configs:
+    path: /configs
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:postConfigs }
+    methods:  [POST]
+
+keboola_google_drive_writer_delete_configs:
+    path: /configs/{id}
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:deleteConfig }
+    methods:  [DELETE]
+
+# Accounts
+keboola_google_drive_writer_get_accounts:
+    path: /accounts/{id}
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getAccounts, id: null }
+    methods:  [GET]
+
+#keboola_google_drive_writer_post_accounts:
+#    path: /accounts/{id}
+#    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:postAccount }
+#    methods:  [POST]
+
+# Files
+keboola_google_drive_writer_get_files:
+    path: /files/{accountId}
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getFiles }
+    methods:  [GET]
+
+keboola_google_drive_writer_post_file:
+    path: /files/{accountId}
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:postFiles }
+    methods:  [POST]

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Keboola Connection | Google Drive Writer{% endblock %}</title>
+    <meta name="viewport" content="width=1024">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    {% stylesheets
+    '@KeboolaGoogleDriveWriterBundle/Resources/public/vendor/bootstrap/bootstrap.min.css'
+    '@KeboolaGoogleDriveWriterBundle/Resources/public/less/main.less'
+    %}
+    <link rel="stylesheet" href="{{ asset_url }}" />
+    {% endstylesheets %}
+</head>
+
+<body class="splash">
+
+<div id="content" class="container">
+    {% block content %}
+
+    {% endblock %}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+{
+	"name": "keboola/google-drive-writer-bundle",
+	"type": "symfony-bundle",
+	"description": "Keboola Google Drive Writer",
+	"keywords": [],
+	"authors": [
+		{
+			"name": "Miroslav Čillík",
+			"email": "miro@keboola.com"
+		}
+	],
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "git@bitbucket.org:keboola/google-client-bundle.git"
+		}
+	],
+	"require": {
+		"php": ">=5.3.5",
+		"keboola/google-client-bundle": "1.1.*",
+		"keboola/syrup": "~1.3.0"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "3.7.*"
+	},
+	"scripts": {
+		"post-install-cmd": [
+			"Incenteev\\ParameterHandler\\ScriptHandler::buildParameters",
+			"Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::buildBootstrap"
+		],
+		"post-update-cmd": [
+			"Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::buildBootstrap",
+			"Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::clearCache"
+		]
+	},
+	"minimum-stability": "stable",
+	"autoload": {
+		"psr-0": { "Keboola\\Google\\DriveWriterBundle": "" }
+	},
+	"target-dir": "Keboola/Google/DriveWriterBundle",
+	"extra": {
+		"symfony-app-dir": "vendor/keboola/syrup/app",
+		"symfony-web-dir": "vendor/keboola/syrup/web",
+		"incenteev-parameters": {
+			"keep-outdated": true,
+			"file": "vendor/keboola/syrup/app/config/parameters.yml",
+			"dist-file": "parameters.yml"
+		}
+	}
+}
