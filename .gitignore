@@ -1,0 +1,13 @@
+parameters.yml
+scripts/debug.php
+*.log
+.idea
+application/configs/config.ini
+cache.properties
+composer.phar
+tmp
+/vendor/
+
+# osx noise
+.DS_Store
+profile
