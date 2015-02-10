@@ -14,7 +14,7 @@ use Keboola\StorageApi\Table;
 
 class Account extends Table
 {
-	protected $header = array('tableId', 'title', 'config');
+	protected $header = array('id', 'title', 'googleId', 'type', 'sheetId', 'tableId', 'incremental', 'targetFolder', 'targetFilename');
 
 	protected $accountId;
 
@@ -30,7 +30,7 @@ class Account extends Table
 		$sysBucket = $this->configuration->getSysBucketId();
 		$this->accountId = $accountId;
 
-		parent::__construct($storageApi, $sysBucket . '.' . $accountId, "", 'tableId', false, ',', '"', true);
+		parent::__construct($storageApi, $sysBucket . '.' . $accountId, "");
 	}
 
 	public function getAttribute($key)
@@ -212,11 +212,7 @@ class Account extends Table
 
 		/** @var File $file */
 		foreach ($this->files as $file) {
-			$data[] = array(
-				'tableId'   => $file->getTableId(),
-				'title'     => $file->getTitle(),
-				'config'    => ''
-			);
+			$data[] = $file->toArray();
 		}
 
 		$this->setFromArray($data);

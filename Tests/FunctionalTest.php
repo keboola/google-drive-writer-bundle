@@ -8,63 +8,46 @@
 namespace Keboola\Google\DriveWriterBundle\Tests;
 
 use Keboola\Google\DriveWriterBundle\Entity\Account;
-use Keboola\StorageApi\Client as SapiClient;
+use Keboola\Google\DriveWriterBundle\Entity\File;
 use Symfony\Component\HttpFoundation\Response;
-use Syrup\ComponentBundle\Test\WebTestCase;
-use Symfony\Bundle\FrameworkBundle\Client;
+use Syrup\ComponentBundle\Encryption\Encryptor;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
-use Syrup\ComponentBundle\Service\Encryption\Encryptor;
-use Syrup\ComponentBundle\Service\Encryption\EncryptorFactory;
+use Syrup\ComponentBundle\Test\AbstractFunctionalTest;
 
-class FunctionalTest extends WebTestCase
+class FunctionalTest extends AbstractFunctionalTest
 {
-	/** @var SapiClient */
-	protected $storageApi;
-
-	/** @var Client */
-	protected static $client;
+	/** @var Configuration */
+	protected $configuration;
 
 	/** @var Encryptor */
 	protected $encryptor;
 
-	/** @var Configuration */
-	protected $configuration;
-
 	protected $componentName = 'wr-google-drive';
 
 	protected $accountId = 'test';
-
 	protected $accountName = 'Test';
-
 	protected $googleId = '123456';
-
 	protected $googleName = 'googleTestAccount';
-
 	protected $email = 'test@keboola.com';
-
 	protected $accessToken = 'accessToken';
-
 	protected $refreshToken = 'refreshToken';
+
+	protected $fileGoogleId;
+	protected $fileTitle;
+	protected $fileType;
+	protected $sheetId;
+	protected $tableId;
 
 	protected function setUp()
 	{
-		self::$client = static::createClient();
-		$container = self::$client->getContainer();
+		parent::setUp();
 
-		$sapiToken = $container->getParameter('storage_api.test.token');
-		$sapiUrl = $container->getParameter('storage_api.test.url');
+		$container = $this->httpClient->getContainer();
 
-		self::$client->setServerParameters(array(
-			'HTTP_X-StorageApi-Token' => $sapiToken
-		));
+		$this->encryptor = $container->get('syrup.encryptor');
 
-		$this->storageApi = new SapiClient($sapiToken, $sapiUrl, $this->componentName);
-
-		/** @var EncryptorFactory $encryptorFactory */
-		$encryptorFactory = $container->get('syrup.encryptor_factory');
-		$this->encryptor = $encryptorFactory->get($this->componentName);
-
-		$this->configuration = new Configuration($this->storageApi, $this->componentName, $this->encryptor);
+		$this->configuration = $container->get('wr_google_drive.configuration');
+		$this->configuration->setStorageApi($this->storageApiClient);
 
 		try {
 			$this->configuration->create();
@@ -74,10 +57,26 @@ class FunctionalTest extends WebTestCase
 
 		// Cleanup
 		$sysBucketId = $this->configuration->getSysBucketId();
-		$accTables = $this->storageApi->listTables($sysBucketId);
+		$accTables = $this->storageApiClient->listTables($sysBucketId);
 		foreach ($accTables as $table) {
-			$this->storageApi->dropTable($table['id']);
+			$this->storageApiClient->dropTable($table['id']);
 		}
+
+		$this->initEnv();
+	}
+
+	protected function initEnv()
+	{
+		$this->googleId = GOOGLE_ID;
+		$this->googleName = GOOGLE_NAME;
+		$this->email = EMAIL;
+		$this->accessToken = $this->encryptor->decrypt(ACCESS_TOKEN);
+		$this->refreshToken = $this->encryptor->decrypt(REFRESH_TOKEN);
+		$this->fileTitle = FILE_TITLE;
+		$this->fileGoogleId = FILE_GOOGLE_ID;
+		$this->fileType = FILE_TYPE;
+		$this->sheetId = SHEET_ID;
+		$this->tableId = TABLE_ID;
 	}
 
 	protected function createConfig()
@@ -117,24 +116,26 @@ class FunctionalTest extends WebTestCase
 		$this->assertEquals($this->refreshToken, $account->getRefreshToken());
 	}
 
+
 	/**
 	 * Config
 	 */
 
 	public function testPostConfig()
 	{
-		self::$client->request(
-			'POST', $this->componentName . '/configs',
-			array(),
-			array(),
-			array(),
-			json_encode(array(
-				'name'          => 'Test',
-				'description'   => 'Test Account created by PhpUnit test suite'
-			))
+		$this->httpClient->request(
+			'POST',
+			$this->componentName . '/configs',
+			[],
+			[],
+			[],
+			json_encode([
+				'name' => 'Test',
+				'description' => 'Test Account created by PhpUnit test suite'
+			])
 		);
 
-		$responseJson = self::$client->getResponse()->getContent();
+		$responseJson = $this->httpClient->getResponse()->getContent();
 		$response = json_decode($responseJson, true);
 
 		$this->assertEquals('test', $response['id']);
@@ -145,9 +146,9 @@ class FunctionalTest extends WebTestCase
 	{
 		$this->createConfig();
 
-		self::$client->request('GET', $this->componentName . '/configs');
+		$this->httpClient->request('GET', $this->componentName . '/configs');
 
-		$responseJson = self::$client->getResponse()->getContent();
+		$responseJson = $this->httpClient->getResponse()->getContent();
 		$response = json_decode($responseJson, true);
 
 		$this->assertEquals('test', $response[0]['id']);
@@ -158,10 +159,10 @@ class FunctionalTest extends WebTestCase
 	{
 		$this->createConfig();
 
-		self::$client->request('DELETE', $this->componentName . '/configs/test');
+		$this->httpClient->request('DELETE', $this->componentName . '/configs/test');
 
 		/* @var Response $response */
-		$response = self::$client->getResponse();
+		$response = $this->httpClient->getResponse();
 
 		$accounts = $this->configuration->getAccounts(true);
 
@@ -173,44 +174,14 @@ class FunctionalTest extends WebTestCase
 	 * Accounts
 	 */
 
-	public function testPostAccount()
-	{
-		$this->createConfig();
-
-		self::$client->request(
-			'POST', $this->componentName . '/account',
-			array(),
-			array(),
-			array(),
-			json_encode(array(
-				'id'            => $this->accountId,
-				'googleId'      => $this->googleId,
-				'googleName'    => $this->googleName,
-				'email'         => $this->email,
-				'accessToken'   => $this->accessToken,
-				'refreshToken'  => $this->refreshToken
-			))
-		);
-
-		$responseJson = self::$client->getResponse()->getContent();
-		$response = json_decode($responseJson, true);
-
-		$this->assertEquals('test', $response['id']);
-
-		$accounts = $this->configuration->getAccounts();
-		$account = $accounts['test'];
-
-		$this->assertAccount($account);
-	}
-
 	public function testGetAccount()
 	{
 		$this->createConfig();
 		$this->createAccount();
 
-		self::$client->request('GET', $this->componentName . '/account/' . $this->accountId);
+		$this->httpClient->request('GET', $this->componentName . '/accounts/' . $this->accountId);
 
-		$responseJson = self::$client->getResponse()->getContent();
+		$responseJson = $this->httpClient->getResponse()->getContent();
 		$response = json_decode($responseJson, true);
 
 		$account = $this->configuration->getAccountBy('accountId', $response['accountId']);
@@ -223,11 +194,11 @@ class FunctionalTest extends WebTestCase
 		$this->createConfig();
 		$this->createAccount();
 
-		self::$client->request(
+		$this->httpClient->request(
 			'GET', $this->componentName . '/accounts'
 		);
 
-		$responseJson = self::$client->getResponse()->getContent();
+		$responseJson = $this->httpClient->getResponse()->getContent();
 		$response = json_decode($responseJson, true);
 
 		$this->assertNotEmpty($response);
@@ -237,39 +208,42 @@ class FunctionalTest extends WebTestCase
 		$this->assertAccount($this->configuration->getAccountBy('accountId', $accountArr['accountId']));
 	}
 
-	public function testPostSheets()
+	/**
+	 * Files
+	 */
+
+	public function testPostFiles()
 	{
 		$this->createConfig();
 		$this->createAccount();
 
-		self::$client->request(
-			'POST', $this->componentName . '/sheets/' . $this->accountId,
-			array(),
-			array(),
-			array(),
-			json_encode(array(
-				'data'  => array(
-					array(
-						'googleId'  => $this->fileGoogleId,
-						'title'     => $this->fileTitle,
-						'sheetId'   => $this->sheetId,
-						'sheetTitle'    => $this->sheetTitle
-					)
-				)
-			))
+		$this->httpClient->request(
+			'POST',
+			$this->componentName . '/files/' . $this->accountId,
+			[],
+			[],
+			[],
+			json_encode([
+				[
+					'tableId' => $this->tableId,
+					'title' => $this->fileTitle,
+				]
+			])
 		);
 
-		$responseJson = self::$client->getResponse()->getContent();
-		$response = json_decode($responseJson, true);
+		$response = $this->httpClient->getResponse();
 
-		$this->assertEquals('ok', $response['status']);
+		$this->assertEquals(201, $response->getStatusCode());
 
-		$account = $this->configuration->getAccountBy('accountId', $this->accountId);
-		$sheets = $account->getSheets();
+		$account = $this->configuration->getAccount($this->accountId);
+		$files = $account->getFiles();
 
-		$this->assertNotEmpty($sheets);
+		$this->assertNotEmpty($files);
+		$file = array_shift($files);
 
-		$this->assertSheet(array_shift($sheets));
+		$this->assertEquals($this->fileTitle, $file->getTitle());
+		$this->assertEquals($this->fileType, $file->getType());
+		$this->assertEquals($this->tableId, $file->getTableId());
 	}
 
 	/**
@@ -281,13 +255,13 @@ class FunctionalTest extends WebTestCase
 		$this->createConfig();
 		$this->createAccount();
 
-		$referrerUrl = self::$client
+		$referrerUrl = $this->httpClient
 			->getContainer()
 			->get('router')
 			->generate('keboola_google_drive_post_external_auth_link', array(), true);
 
-		self::$client->followRedirects();
-		self::$client->request(
+		$this->httpClient->followRedirects();
+		$this->httpClient->request(
 			'POST',
 			$this->componentName . '/external-link',
 			array(),
@@ -299,7 +273,7 @@ class FunctionalTest extends WebTestCase
 			))
 		);
 
-		$responseJson = self::$client->getResponse()->getContent();
+		$responseJson = $this->httpClient->getResponse()->getContent();
 		$response = json_decode($responseJson, true);
 
 		$this->assertArrayHasKey('link', $response);
@@ -314,4 +288,5 @@ class FunctionalTest extends WebTestCase
 	{
 		//@TODO
 	}
+
 }

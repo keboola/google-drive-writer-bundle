@@ -1,7 +1,17 @@
-parameters:
-#    keboola_google_drive_writer.example.class: Keboola\GoogleDriveWriterBundle\Example
-
 services:
-    google_drive_writer_rest_api:
+
+    wr_google_drive.rest_api:
         class: Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi
-        arguments: [@google_rest_api]
+        arguments: [@google_rest_api, @templating]
+
+    wr_google_drive.configuration:
+        class: Keboola\Google\DriveWriterBundle\Writer\Configuration
+        arguments: [%app_name%, @syrup.encryptor]
+
+    wr_google_drive.writer:
+        class: Keboola\Google\DriveWriterBundle\Writer\Writer
+        arguments: [@wr_google_drive.rest_api, @syrup.temp, @logger]
+
+    wr_google_drive.job_executor:
+        class: Keboola\Google\DriveWriterBundle\Job\Executor
+        arguments: [@wr_google_drive.writer, @wr_google_drive.configuration]

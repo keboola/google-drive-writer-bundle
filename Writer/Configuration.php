@@ -10,6 +10,7 @@ namespace Keboola\Google\DriveWriterBundle\Writer;
 
 use Keboola\Encryption\EncryptorInterface;
 use Keboola\Google\DriveWriterBundle\Entity\AccountFactory;
+use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\Entity\Sheet;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Exception\ConfigurationException;
@@ -36,14 +37,12 @@ class Configuration
 
 	protected $tokenExpiration = 172800;
 
-	public function __construct(StorageApi $storageApi, $componentName, EncryptorInterface $encryptor)
+	public function __construct($componentName, EncryptorInterface $encryptor)
 	{
-		$this->storageApi = $storageApi;
 		$this->componentName = $componentName;
 		$this->encryptor = $encryptor;
 
 		$this->accountFactory = new AccountFactory($this);
-		$this->accounts = $this->getAccounts();
 	}
 
 	public function getEncryptor()
@@ -54,6 +53,11 @@ class Configuration
 	public function setEncryptor($encryptor)
 	{
 		$this->encryptor = $encryptor;
+	}
+
+	public function setStorageApi($storageApi)
+	{
+		$this->storageApi = $storageApi;
 	}
 
 	public function getStorageApi()
@@ -146,6 +150,21 @@ class Configuration
 		return $accounts;
 	}
 
+	/**
+	 * @param $id
+	 * @return Account|array
+	 */
+	public function getAccount($id)
+	{
+		$accounts = $this->getAccounts();
+
+		if (!isset($accounts[$id])) {
+			throw new ConfigurationException(sprintf("Account %s not found", $id));
+		}
+
+		return $accounts[$id];
+	}
+
 	public function getAccountBy($key, $value, $asArray = false)
 	{
 		$accounts = $this->getAccounts();
@@ -204,5 +223,22 @@ class Configuration
 		$token = $this->storageApi->getToken($tokenId);
 
 		return $token;
+	}
+
+	public function getFiles($accountId)
+	{
+		return $this->getAccount($accountId)->getFiles();
+	}
+
+	public function addFiles($accountId, $files = [])
+	{
+		$account = $this->getAccount($accountId);
+
+		foreach ($files as $fileData) {
+			$fileData['id'] = $this->storageApi->generateId();
+			$account->addFile($fileData);
+		}
+
+		$account->save();
 	}
 }

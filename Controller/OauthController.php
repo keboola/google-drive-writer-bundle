@@ -18,6 +18,7 @@ use Keboola\Google\DriveWriterBundle\Exception\ParameterMissingException;
 use Keboola\StorageApi\ClientException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBag;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -42,14 +43,12 @@ class OauthController extends BaseController
 		return $this->container->get('google_rest_api');
 	}
 
-	public function externalAuthAction()
+	public function externalAuthAction(Request $request)
 	{
-		$request = $this->getRequest();
-
 		// check token - if expired redirect to error page
 		try {
 			$sapi = new StorageApi(array(
-				'token'     => $this->getRequest()->request->get('token'),
+				'token'     => $request->request->get('token'),
 				'userAgent' => $this->componentName
 			));
 			$sapi->verifyToken();
@@ -103,7 +102,8 @@ class OauthController extends BaseController
 			/** @var EncryptorInterface $encryptor */
 			$encryptor = $this->get('syrup.encryptor');
 
-			$configuration = new Configuration($storageApi, $this->componentName, $encryptor);
+			$configuration = new Configuration($this->componentName, $encryptor);
+			$configuration->setStorageApi($storageApi);
 
 			$tokens = $googleApi->authorize($code, $this->container->get('router')->generate(
 					'keboola_google_drive_writer_oauth_callback', array(), UrlGeneratorInterface::ABSOLUTE_URL)
@@ -138,9 +138,9 @@ class OauthController extends BaseController
 		}
 	}
 
-	public function oauthAction()
+	public function oauthAction(Request $request)
 	{
-		if (!$this->getRequest()->request->get('account')) {
+		if (!$request->request->get('account')) {
 			throw new ParameterMissingException("Parameter 'account' is missing");
 		}
 
@@ -149,7 +149,7 @@ class OauthController extends BaseController
 
 		try {
 			$client = new StorageApi(array(
-				'token'     => $this->getRequest()->request->get('token'),
+				'token'     => $request->request->get('token'),
 				'userAgent' => $this->componentName
 			));
 
@@ -160,8 +160,8 @@ class OauthController extends BaseController
 			);
 
 			$session->set('token', $client->getTokenString());
-			$session->set('account', $this->getRequest()->request->get('account'));
-			$session->set('referrer', $this->getRequest()->request->get('referrer'));
+			$session->set('account', $request->request->get('account'));
+			$session->set('referrer', $request->request->get('referrer'));
 
 			return new RedirectResponse($url);
 		} catch (\Exception $e) {

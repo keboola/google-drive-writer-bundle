@@ -1,7 +1,3 @@
-#keboola_google_drive_writer_homepage:
-#    pattern:  /hello/{name}
-#    defaults: { _controller: KeboolaGoogleDriveWriterBundle:Default:index }
-
 # OAuth
 keboola_google_drive_writer_oauth:
     path: /oauth
@@ -50,11 +46,6 @@ keboola_google_drive_writer_get_accounts:
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getAccounts, id: null }
     methods:  [GET]
 
-#keboola_google_drive_writer_post_accounts:
-#    path: /accounts/{id}
-#    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:postAccount }
-#    methods:  [POST]
-
 # Files
 keboola_google_drive_writer_get_files:
     path: /files/{accountId}
@@ -65,3 +56,8 @@ keboola_google_drive_writer_post_file:
     path: /files/{accountId}
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:postFiles }
     methods:  [POST]
+
+keboola_google_drive_writer_get_remote_files:
+    path: /remote-files/{accountId}
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getRemoteFiles }
+    methods:  [GET]

@@ -28,9 +28,26 @@ parameters:
         aws-secret-key:
         s3-upload-path:
         bitly-login:
-        bitly-api-key: 
+        bitly-api-key:
+
+    queue:
+        access_key:
+        secret_key:
+        region:
+        url:
+
+    elasticsearch:
+        hosts: [localhost:9200]
+
+    job_manager:
+        index_prefix: devel
+
+    encryption_key:
 
     components:
+        api-google:
+            class: Keboola\Google\ClientBundle\Client
+            bundle: Keboola\Google\ClientBundle\KeboolaGoogleClientBundle
         wr-google-drive:
             class:  Keboola\Google\DriveWriterBundle\GoogleDriveWriter
             bundle: Keboola\Google\DriveWriterBundle\KeboolaGoogleDriveWriterBundle
