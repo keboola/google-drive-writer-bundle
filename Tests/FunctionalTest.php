@@ -7,8 +7,10 @@
 
 namespace Keboola\Google\DriveWriterBundle\Tests;
 
+use Keboola\Csv\CsvFile;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
+use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
 use Symfony\Component\HttpFoundation\Response;
 use Syrup\ComponentBundle\Encryption\Encryptor;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
@@ -32,11 +34,16 @@ class FunctionalTest extends AbstractFunctionalTest
 	protected $accessToken = 'accessToken';
 	protected $refreshToken = 'refreshToken';
 
-	protected $fileGoogleId;
+//	protected $fileGoogleId;
 	protected $fileTitle;
-	protected $fileType;
-	protected $sheetId;
-	protected $tableId;
+//	protected $fileType;
+//	protected $sheetId;
+	protected $tableId = 'in.c-wr-google-drive.test';
+
+	protected $testCsvPath;
+
+	/** @var RestApi */
+	protected $restApi;
 
 	protected function setUp()
 	{
@@ -55,6 +62,9 @@ class FunctionalTest extends AbstractFunctionalTest
 			// bucket exists
 		}
 
+		$this->initEnv();
+		$this->initApi($this->accessToken, $this->refreshToken);
+
 		// Cleanup
 		$sysBucketId = $this->configuration->getSysBucketId();
 		$accTables = $this->storageApiClient->listTables($sysBucketId);
@@ -62,7 +72,10 @@ class FunctionalTest extends AbstractFunctionalTest
 			$this->storageApiClient->dropTable($table['id']);
 		}
 
-		$this->initEnv();
+		if ($this->storageApiClient->tableExists($this->tableId)) {
+			$this->storageApiClient->dropTable($this->tableId);
+		}
+		$this->storageApiClient->createTable('in.c-wr-google-drive', 'test', new CsvFile($this->testCsvPath));
 	}
 
 	protected function initEnv()
@@ -73,10 +86,18 @@ class FunctionalTest extends AbstractFunctionalTest
 		$this->accessToken = $this->encryptor->decrypt(ACCESS_TOKEN);
 		$this->refreshToken = $this->encryptor->decrypt(REFRESH_TOKEN);
 		$this->fileTitle = FILE_TITLE;
-		$this->fileGoogleId = FILE_GOOGLE_ID;
-		$this->fileType = FILE_TYPE;
-		$this->sheetId = SHEET_ID;
+//		$this->fileGoogleId = FILE_GOOGLE_ID;
+//		$this->fileType = FILE_TYPE;
+//		$this->sheetId = SHEET_ID;
 		$this->tableId = TABLE_ID;
+
+		$this->testCsvPath = realpath(__DIR__ . '/../data/test.csv');
+	}
+
+	protected function initApi($accessToken, $refreshToken)
+	{
+		$this->restApi->getApi()->setCredentials($accessToken, $refreshToken);
+		$this->restApi->getApi()->setRefreshTokenCallback(array($this, 'refreshTokenCallback'));
 	}
 
 	protected function createConfig()
@@ -100,6 +121,28 @@ class FunctionalTest extends AbstractFunctionalTest
 		$account->setRefreshToken($this->refreshToken);
 
 		$account->save();
+	}
+
+	protected function createTestFiles()
+	{
+		$file = new File([
+			'id' => 0,
+			'title' => 'Test Sheet',
+			'tableId' => 'empty',
+			'type' => 'sheet',
+			'pathname' => $this->testCsvPath
+		]);
+
+		$file2 = new File([
+			'id' => 1,
+			'title' => 'Test File',
+			'tableId' => 'empty',
+			'type' => 'file',
+			'pathname' => $this->testCsvPath
+		]);
+
+		$this->restApi->insertFile($file);
+		$this->restApi->insertFile($file2);
 	}
 
 	/**
@@ -227,6 +270,7 @@ class FunctionalTest extends AbstractFunctionalTest
 				[
 					'tableId' => $this->tableId,
 					'title' => $this->fileTitle,
+					'type' => 'file'
 				]
 			])
 		);
@@ -242,8 +286,20 @@ class FunctionalTest extends AbstractFunctionalTest
 		$file = array_shift($files);
 
 		$this->assertEquals($this->fileTitle, $file->getTitle());
-		$this->assertEquals($this->fileType, $file->getType());
+		$this->assertEquals('file', $file->getType());
 		$this->assertEquals($this->tableId, $file->getTableId());
+	}
+
+	public function testGetFiles()
+	{
+		$this->createConfig();
+		$this->createAccount();
+		$this->createTestFiles();
+	}
+
+	public function testDeleteFile()
+	{
+
 	}
 
 	/**
@@ -258,19 +314,19 @@ class FunctionalTest extends AbstractFunctionalTest
 		$referrerUrl = $this->httpClient
 			->getContainer()
 			->get('router')
-			->generate('keboola_google_drive_post_external_auth_link', array(), true);
+			->generate('keboola_google_drive_post_external_auth_link', [], true);
 
 		$this->httpClient->followRedirects();
 		$this->httpClient->request(
 			'POST',
 			$this->componentName . '/external-link',
-			array(),
-			array(),
-			array(),
-			json_encode(array(
+			[],
+			[],
+			[],
+			json_encode([
 				'account'   => $this->accountId,
 				'referrer'  => $referrerUrl
-			))
+			])
 		);
 
 		$responseJson = $this->httpClient->getResponse()->getContent();

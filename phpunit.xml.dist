@@ -20,6 +20,7 @@
 		</testsuite>
 		<testsuite name="Unit Tests">
 			<file>Tests/GoogleDrive/RestApiTest.php</file>
+			<file>Tests/Writer/WriterTest.php</file>
 		</testsuite>
 	</testsuites>
 </phpunit>

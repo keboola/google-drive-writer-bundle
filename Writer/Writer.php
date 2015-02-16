@@ -77,25 +77,11 @@ class Writer
 				$this->storageApi->exportTable($file->getTableId(), $file->getPathname());
 				$this->initApi($account);
 
-				try {
-
 					if ($file->getType() == File::TYPE_FILE) {
 						$this->processFile($file);
 					} else {
 						$this->processSheet($file);
 					}
-
-				} catch (BadResponseException $e) {
-
-					$statusCode = $e->getResponse()->getStatusCode();
-					if ($statusCode == 404) {
-
-						// file not found - create new one and issue a warning
-						$response = $this->googleDriveApi->insertFile($file);
-						$file->setGoogleId($response['id']);
-					}
-
-				}
 
 			}
 
@@ -106,24 +92,38 @@ class Writer
 
 	protected function processFile(File $file)
 	{
-
-		if (null == $file->getGoogleId() || $file->isIncremental()) {
+		if (null == $file->getGoogleId() || $file->isOperationCreate()) {
 
 			// create new file
 			$response = $this->googleDriveApi->insertFile($file);
 
+			// update file with googleId
 			$file->setGoogleId($response['id']);
 
 		} else {
-
 			// overwrite existing file
-			$response = $this->googleDriveApi->updateFile($file);
+			try {
+				$response = $this->googleDriveApi->updateFile($file);
+
+			} catch (BadResponseException $e) {
+				$statusCode = $e->getResponse()->getStatusCode();
+
+				if ($statusCode == 404) {
+
+					// file not found - create new one and issue a warning
+					$response = $this->googleDriveApi->insertFile($file);
+					$file->setGoogleId($response['id']);
+				}
+
+			}
 		}
+
+		return $file;
 	}
 
 	protected function processSheet(File $file)
 	{
-		if (null == $file->getGoogleId() || $file->isIncremental()) {
+		if (null == $file->getGoogleId() || null == $file->getSheetId() || $file->isOperationCreate()) {
 
 			// create new file
 			$fileRes = $this->googleDriveApi->insertFile($file);
@@ -134,12 +134,16 @@ class Writer
 
 			// update file
 			$file->setGoogleId($fileRes['id']);
-			$file->setSheetId($sheet['id']);
+			$file->setSheetId($sheet['wsid']);
+
+		} else if ($file->isOperationUpdate()) {
+
+			// update content of existing file
+			$response = $this->googleDriveApi->updateCells($file);
 
 		} else {
 
-			// update content of existing file
-			$response = $this->googleDriveApi->updateSheet($file);
+			// @TODO: append sheet
 		}
 
 		return $file;

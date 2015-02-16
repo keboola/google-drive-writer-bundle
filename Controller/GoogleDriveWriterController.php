@@ -186,6 +186,7 @@ class GoogleDriveWriterController extends ApiController
 		return $this->createJsonResponse([], 201);
 	}
 
+
 	public function getRemoteFilesAction($accountId, Request $request)
 	{
 		$account = $this->configuration->getAccount($accountId);

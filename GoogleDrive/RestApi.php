@@ -73,11 +73,9 @@ class RestApi
 
 	public function updateFile(File $file)
 	{
-		$convert = ($file->getType() == File::TYPE_SHEET)?'true':'false';
-
 		$response = $this->api->request(
-			self::FILE_UPLOAD . '/' . $file->getGoogleId() . '?uploadType=resumable&convert=' . $convert,
-			'POST',
+			self::FILE_UPLOAD . '/' . $file->getGoogleId() . '?uploadType=resumable',
+			'PUT',
 			[
 				'Content-Type' => 'application/json; charset=UTF-8',
 				'X-Upload-Content-Type' => 'text/csv',
@@ -90,7 +88,7 @@ class RestApi
 
 		$locationUri = $response->getHeader('Location');
 
-		return $this->putFile($file, $locationUri, $convert);
+		return $this->putFile($file, $locationUri, false);
 	}
 
 	protected function putFile(File $file, $locationUri, $convert)

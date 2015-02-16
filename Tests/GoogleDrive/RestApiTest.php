@@ -72,19 +72,7 @@ class RestApiTest extends WebTestCase
 		]);
 	}
 
-	public function testCsvToAtom()
-	{
-		$feed = $this->restApi->csvToAtom($this->testCsvPath, 0);
-
-		$this->assertEquals(file_get_contents($this->expectedFeedPath), $feed);
-	}
-
 	public function testInsertFile()
-	{
-
-	}
-
-	public function testInsertSheet()
 	{
 		$file = $this->createTestFile();
 		$response = $this->restApi->insertFile($file);

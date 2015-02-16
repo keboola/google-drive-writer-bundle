@@ -13,15 +13,18 @@ class File
 	const TYPE_FILE = 'file';
 	const TYPE_SHEET = 'sheet';
 
+	const OPERATION_CREATE = 'create';
+	const OPERATION_UPDATE = 'update';
+	const OPERATION_APPEND = 'append';
+
 	protected $id;
 	protected $title;
 	protected $googleId;
 	protected $type;
 	protected $sheetId;
 	protected $tableId;
-	protected $incremental;
+	protected $operation;
 	protected $targetFolder;
-	protected $targetFilename;
 	protected $pathname;
 
 	public function __construct(array $data)
@@ -32,9 +35,8 @@ class File
 		$this->googleId = isset($data['googleId'])?$data['googleId']:null;
 		$this->type = isset($data['type'])?$data['type']:static::TYPE_FILE;
 		$this->sheetId = isset($data['sheetId'])?$data['sheetId']:null;
-		$this->incremental = isset($data['incremental'])?$data['incremental']:false;
+		$this->operation = isset($data['operation'])?$data['operation']:static::OPERATION_UPDATE;
 		$this->targetFolder = isset($data['targetFolder'])?$data['targetFolder']:null;
-		$this->targetFilename = isset($data['targetFilename'])?$data['targetFilename']:null;
 
 		$this->pathname = isset($data['pathname'])?$data['pathname']:null;
 	}
@@ -99,27 +101,21 @@ class File
 
 	public function toArray()
 	{
-		return array(
-			'id'        => $this->id,
-			'title'     => $this->title,
-			'googleId'  => $this->googleId,
-			'type'      => $this->type,
-			'sheetId'   => $this->sheetId,
-			'tableId'   => $this->tableId,
-			'incremental'   => $this->incremental,
-			'targetFolder'  => $this->targetFolder,
-			'targetFilename'    => $this->targetFilename
-		);
+		return [
+			'id' => $this->id,
+			'title' => $this->title,
+			'googleId' => $this->googleId,
+			'type' => $this->type,
+			'sheetId' => $this->sheetId,
+			'tableId' => $this->tableId,
+			'operation' => $this->operation,
+			'targetFolder' => $this->targetFolder
+		];
 	}
 
 	public function getType()
 	{
 		return $this->type;
-	}
-
-	public function isIncremental()
-	{
-		return (bool) $this->incremental;
 	}
 
 	public function setSheetId($sheetId)
@@ -130,5 +126,20 @@ class File
 	public function getSheetId()
 	{
 		return $this->sheetId;
+	}
+
+	public function isOperationCreate()
+	{
+		return ($this->operation == static::OPERATION_CREATE);
+	}
+
+	public function isOperationUpdate()
+	{
+		return ($this->operation == static::OPERATION_UPDATE);
+	}
+
+	public function isOperationAppend()
+	{
+		return ($this->operation == static::OPERATION_APPEND);
 	}
 }
