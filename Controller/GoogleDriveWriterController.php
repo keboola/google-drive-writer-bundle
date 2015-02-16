@@ -16,6 +16,7 @@ use Keboola\Google\DriveWriterBundle\Writer\Writer;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Syrup\ComponentBundle\Controller\ApiController;
+use Syrup\ComponentBundle\Exception\UserException;
 
 class GoogleDriveWriterController extends ApiController
 {
@@ -61,7 +62,7 @@ class GoogleDriveWriterController extends ApiController
 
 		$referrer = $post['referrer'] . '?token=' . $token['token'] .'&account=' . $post['account'];
 
-		$url = $this->generateUrl('keboola_google_drive_external_auth', array(
+		$url = $this->generateUrl('keboola_google_drive_writer_external_auth', array(
 			'token'     => $token['token'],
 			'account'   => $post['account'],
 			'referrer'  => $referrer
@@ -70,6 +71,29 @@ class GoogleDriveWriterController extends ApiController
 		return $this->createJsonResponse(array(
 			'link'  => $url
 		));
+	}
+
+	/**
+	 * Access Token for JS
+	 *
+	 * @param $accountId
+	 * @return JsonResponse
+	 */
+	public function getAccessTokenAction($accountId)
+	{
+		$account = $this->configuration->getAccount($accountId);
+
+		if (null == $account->getAccessToken()) {
+			throw new UserException("Account not authorized yet");
+		}
+
+		/** @var Writer $writer */
+		$writer = $this->container->get('wr_google_drive.writer');
+
+		return $this->createJsonResponse([
+			'token' => $writer->refreshToken($account),
+			'apiKey' => $this->container->getParameter('google.browser-key')
+		]);
 	}
 
 	/** Configs */
@@ -183,10 +207,44 @@ class GoogleDriveWriterController extends ApiController
 
 		$this->configuration->addFiles($accountId, $params);
 
-		return $this->createJsonResponse([], 201);
+		$files = [];
+
+		/** @var File $file */
+		foreach ($this->configuration->getFiles($accountId) as $file) {
+			$files[] = $file->toArray();
+		}
+
+		return $this->createJsonResponse($files, 201);
+	}
+
+	/**
+	 * @param         $accountId
+	 * @param         $fileId
+	 * @param Request $request
+	 * @return JsonResponse
+	 */
+	public function putFilesAction($accountId, $fileId, Request $request)
+	{
+		$params = $this->getPostJson($request);
+
+		$this->configuration->updateFile($accountId, $fileId, $params);
+
+		$files = [];
+
+		/** @var File $file */
+		foreach ($this->configuration->getFiles($accountId) as $file) {
+			$files[] = $file->toArray();
+		}
+
+		return $this->createJsonResponse($files, 200);
 	}
 
 
+	/**
+	 * @param         $accountId
+	 * @param Request $request
+	 * @return JsonResponse
+	 */
 	public function getRemoteFilesAction($accountId, Request $request)
 	{
 		$account = $this->configuration->getAccount($accountId);
@@ -195,12 +253,23 @@ class GoogleDriveWriterController extends ApiController
 
 		/** @var Writer $writer */
 		$writer = $this->container->get('wr_google_drive.writer');
-		$writer->setConfiguration($this->configuration);
 
 		$response = $writer->listFiles($account, $params);
 
 
 		return $this->createJsonResponse($response);
+	}
+
+	/**
+	 * @param $accountId
+	 * @param $fileId
+	 * @return JsonResponse
+	 */
+	public function deleteFileAction($accountId, $fileId)
+	{
+		$this->configuration->deleteFile($accountId, $fileId);
+
+		return $this->createJsonResponse([], 204);
 	}
 
 }

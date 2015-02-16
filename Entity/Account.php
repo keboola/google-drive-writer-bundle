@@ -179,17 +179,47 @@ class Account extends Table
 		}
 	}
 
-	public function toArray()
+	public function getFile($fileId)
 	{
-		$attributes = $this->getAttributes();
-		$attributes['accountId'] = $this->accountId;
-		$array = array_merge(
-			$attributes,
-			array(
-				'items' => $this->getData()
-			)
-		);
-		return $array;
+		/**
+		 * @var int $k
+		 * @var File $v
+		 */
+		foreach ($this->files as $k => $v) {
+			if ($v->getId() == $fileId) {
+				return $v;
+			}
+		}
+
+		return null;
+	}
+
+	public function updateFile($fileId, $params)
+	{
+		$file = null;
+		$fileIndex = null;
+
+		/**
+		 * @var int $k
+		 * @var File $v
+		 */
+		foreach ($this->files as $k => $v) {
+			if ($v->getId() == $fileId) {
+				$file = $v;
+				$fileIndex = $k;
+				break;
+			}
+		}
+
+		foreach ($params as $k => $v) {
+			$methodName = 'set' . ucfirst($k);
+
+			if (method_exists($file, $methodName)) {
+				$file->$methodName($v);
+			}
+		}
+
+		$this->files[$fileIndex] = $file;
 	}
 
 	public function addFile($fileData)
@@ -204,6 +234,33 @@ class Account extends Table
 		$this->files[] = new File($fileData);
 
 		return $this;
+	}
+
+	public function removeFile($fileId)
+	{
+		/**
+		 * @var int $k
+		 * @var File $v
+		 */
+		foreach ($this->files as $k => $v) {
+			if ($v->getId() == $fileId) {
+				unset($this->files[$k]);
+				break;
+			}
+		}
+	}
+
+	public function toArray()
+	{
+		$attributes = $this->getAttributes();
+		$attributes['accountId'] = $this->accountId;
+		$array = array_merge(
+			$attributes,
+			array(
+				'items' => $this->getData()
+			)
+		);
+		return $array;
 	}
 
 	public function save($async = false)

@@ -113,6 +113,13 @@ class File
 		];
 	}
 
+	public function setType($type)
+	{
+		$this->type = $type;
+
+		return $this;
+	}
+
 	public function getType()
 	{
 		return $this->type;
@@ -121,6 +128,8 @@ class File
 	public function setSheetId($sheetId)
 	{
 		$this->sheetId = $sheetId;
+
+		return $this;
 	}
 
 	public function getSheetId()

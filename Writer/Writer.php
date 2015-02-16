@@ -12,7 +12,6 @@ use GuzzleHttp\Exception\BadResponseException;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
-use Keboola\StorageApi\Client;
 use Monolog\Logger;
 use Syrup\ComponentBundle\Exception\UserException;
 use Syrup\ComponentBundle\Filesystem\Temp;
@@ -22,75 +21,32 @@ class Writer
 	/** @var RestApi */
 	protected $googleDriveApi;
 
-	/** @var Temp */
-	protected $temp;
-
 	/** @var Logger */
 	protected $logger;
 
-	/** @var Configuration */
-	protected $configuration;
+//	/** @var Configuration */
+//	protected $configuration;
 
-	/** @var Client */
-	protected $storageApi;
+//	/** @var Client */
+//	protected $storageApi;
 
 	/** @var Account */
 	protected $currAccount;
 
 
-	public function __construct(RestApi $googleDriveApi, Temp $temp, Logger $logger)
+	public function __construct(RestApi $googleDriveApi, Logger $logger)
 	{
 		$this->googleDriveApi = $googleDriveApi;
-		$this->temp = $temp;
+		$this->logger = $logger;
 	}
 
-	public function setConfiguration($configuration)
-	{
-		$this->configuration = $configuration;
-		$this->storageApi = $this->configuration->getStorageApi();
-	}
+//	public function setConfiguration($configuration)
+//	{
+//		$this->configuration = $configuration;
+//		$this->storageApi = $this->configuration->getStorageApi();
+//	}
 
-	public function uploadFiles($options)
-	{
-		$accounts = $this->configuration->getAccounts();
-
-		if (isset($options['account'])) {
-			if (!isset($accounts[$options['account']])) {
-				throw new UserException("Account '" . $options['account'] . "' does not exist.");
-			}
-			$accounts = array(
-				$options['account'] => $accounts[$options['account']]
-			);
-		}
-
-		$status = [];
-
-		/** @var Account $account */
-		foreach ($accounts as $accountId => $account) {
-
-			$files = $account->getFiles();
-
-			/** @var File $file */
-			foreach ($files as $file) {
-
-				$file->setPathname($this->temp->createTmpFile()->getPathname());
-				$this->storageApi->exportTable($file->getTableId(), $file->getPathname());
-				$this->initApi($account);
-
-					if ($file->getType() == File::TYPE_FILE) {
-						$this->processFile($file);
-					} else {
-						$this->processSheet($file);
-					}
-
-			}
-
-			// updated changes to files
-			$account->save();
-		}
-	}
-
-	protected function processFile(File $file)
+	public function processFile(File $file)
 	{
 		if (null == $file->getGoogleId() || $file->isOperationCreate()) {
 
@@ -121,7 +77,7 @@ class Writer
 		return $file;
 	}
 
-	protected function processSheet(File $file)
+	public function processSheet(File $file)
 	{
 		if (null == $file->getGoogleId() || null == $file->getSheetId() || $file->isOperationCreate()) {
 
@@ -156,7 +112,15 @@ class Writer
 		return $this->googleDriveApi->listFiles($params);
 	}
 
-	protected function initApi(Account $account)
+	public function refreshToken(Account $account)
+	{
+		$this->initApi($account);
+
+		$response = $this->googleDriveApi->getApi()->refreshToken();
+		return $response['access_token'];
+	}
+
+	public function initApi(Account $account)
 	{
 		$this->currAccount = $account;
 		$this->googleDriveApi->getApi()->setCredentials($account->getAccessToken(), $account->getRefreshToken());

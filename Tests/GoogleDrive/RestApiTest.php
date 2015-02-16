@@ -100,9 +100,10 @@ class RestApiTest extends WebTestCase
 		$this->assertCount(1, $response);
 		$sheet = array_shift($response);
 		$this->assertArrayHasKey('id', $sheet);
+		$this->assertArrayHasKey('wsid', $sheet);
 
 		// cleanup
-		$file->setGoogleId($response['id']);
+		$file->setGoogleId($fileGoogleId);
 		$this->restApi->deleteFile($file);
 	}
 
@@ -114,7 +115,7 @@ class RestApiTest extends WebTestCase
 
 		$response = $this->restApi->getWorksheetsFeed($fileGoogleId);
 
-		$this->assertEquals($file->getTitle(), $response['feed']['title']);
+		$this->assertEquals($file->getTitle(), $response['feed']['title']['$t']);
 
 		// cleanup
 		$file->setGoogleId($fileGoogleId);

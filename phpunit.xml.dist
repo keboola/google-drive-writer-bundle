@@ -15,12 +15,12 @@
 		<ini name="display_errors" value="true"/>
 	</php>
 	<testsuites>
-		<testsuite name="Functional Tests">
-            <file>Tests/FunctionalTest.php</file>
-		</testsuite>
 		<testsuite name="Unit Tests">
 			<file>Tests/GoogleDrive/RestApiTest.php</file>
 			<file>Tests/Writer/WriterTest.php</file>
+		</testsuite>
+		<testsuite name="Functional Tests">
+			<file>Tests/FunctionalTest.php</file>
 		</testsuite>
 	</testsuites>
 </phpunit>

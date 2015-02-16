@@ -11,6 +11,7 @@ use Keboola\Csv\CsvFile;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
+use Keboola\StorageApi\Client;
 use Symfony\Component\HttpFoundation\Response;
 use Syrup\ComponentBundle\Encryption\Encryptor;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
@@ -52,6 +53,9 @@ class FunctionalTest extends AbstractFunctionalTest
 		$container = $this->httpClient->getContainer();
 
 		$this->encryptor = $container->get('syrup.encryptor');
+		$this->restApi = $container->get('wr_google_drive.rest_api');
+
+		$this->testCsvPath = __DIR__ . '/data/test.csv';
 
 		$this->configuration = $container->get('wr_google_drive.configuration');
 		$this->configuration->setStorageApi($this->storageApiClient);
@@ -75,7 +79,13 @@ class FunctionalTest extends AbstractFunctionalTest
 		if ($this->storageApiClient->tableExists($this->tableId)) {
 			$this->storageApiClient->dropTable($this->tableId);
 		}
-		$this->storageApiClient->createTable('in.c-wr-google-drive', 'test', new CsvFile($this->testCsvPath));
+
+		if (!$this->storageApiClient->bucketExists('in.c-wr-google-drive')) {
+			$this->storageApiClient->createBucket('wr-google-drive', Client::STAGE_IN, 'Google Drive IN bucket');
+		}
+
+		$csvFile = new CsvFile($this->testCsvPath);
+		$this->storageApiClient->createTable('in.c-wr-google-drive', 'test', $csvFile);
 	}
 
 	protected function initEnv()
@@ -86,18 +96,21 @@ class FunctionalTest extends AbstractFunctionalTest
 		$this->accessToken = $this->encryptor->decrypt(ACCESS_TOKEN);
 		$this->refreshToken = $this->encryptor->decrypt(REFRESH_TOKEN);
 		$this->fileTitle = FILE_TITLE;
-//		$this->fileGoogleId = FILE_GOOGLE_ID;
-//		$this->fileType = FILE_TYPE;
-//		$this->sheetId = SHEET_ID;
 		$this->tableId = TABLE_ID;
-
-		$this->testCsvPath = realpath(__DIR__ . '/../data/test.csv');
 	}
 
 	protected function initApi($accessToken, $refreshToken)
 	{
 		$this->restApi->getApi()->setCredentials($accessToken, $refreshToken);
 		$this->restApi->getApi()->setRefreshTokenCallback(array($this, 'refreshTokenCallback'));
+	}
+
+	public function refreshTokenCallback($accessToken, $refreshToken)
+	{
+		$account = $this->configuration->getAccount($this->accountId);
+		$account->setAccessToken($accessToken);
+		$account->setRefreshToken($refreshToken);
+		$account->save();
 	}
 
 	protected function createConfig()
@@ -121,28 +134,6 @@ class FunctionalTest extends AbstractFunctionalTest
 		$account->setRefreshToken($this->refreshToken);
 
 		$account->save();
-	}
-
-	protected function createTestFiles()
-	{
-		$file = new File([
-			'id' => 0,
-			'title' => 'Test Sheet',
-			'tableId' => 'empty',
-			'type' => 'sheet',
-			'pathname' => $this->testCsvPath
-		]);
-
-		$file2 = new File([
-			'id' => 1,
-			'title' => 'Test File',
-			'tableId' => 'empty',
-			'type' => 'file',
-			'pathname' => $this->testCsvPath
-		]);
-
-		$this->restApi->insertFile($file);
-		$this->restApi->insertFile($file2);
 	}
 
 	/**
@@ -294,12 +285,87 @@ class FunctionalTest extends AbstractFunctionalTest
 	{
 		$this->createConfig();
 		$this->createAccount();
-		$this->createTestFiles();
+
+		// add files to config
+		$file = new File([
+			'id' => 0,
+			'title' => 'Test Sheet',
+			'tableId' => 'empty',
+			'type' => 'sheet',
+			'pathname' => $this->testCsvPath
+		]);
+
+		$file2 = new File([
+			'id' => 1,
+			'title' => 'Test File',
+			'tableId' => 'empty2',
+			'type' => 'file',
+			'pathname' => $this->testCsvPath
+		]);
+
+		$this->configuration->addFiles($this->accountId, [
+			$file->toArray(),
+			$file2->toArray()
+		]);
+
+		// call the API
+		$this->httpClient->request(
+			'GET',
+			$this->componentName . '/files/' . $this->accountId
+		);
+
+		$response = $this->httpClient->getResponse();
+
+		$this->assertEquals(200, $response->getStatusCode());
+
+		$files = json_decode($response->getContent(), true);
+
+		$this->assertCount(2, $files);
+
+		$fileInConfig = array_shift($files);
+
+		$this->assertEquals('Test Sheet', $fileInConfig['title']);
+		$this->assertEquals('empty', $fileInConfig['tableId']);
+		$this->assertEquals('sheet', $fileInConfig['type']);
+
+		$fileInConfig = array_shift($files);
+
+		$this->assertEquals('Test File', $fileInConfig['title']);
+		$this->assertEquals('empty2', $fileInConfig['tableId']);
+		$this->assertEquals('file', $fileInConfig['type']);
 	}
 
 	public function testDeleteFile()
 	{
+		$this->createConfig();
+		$this->createAccount();
 
+		// add files to config
+		$this->configuration->addFiles($this->accountId, [
+			[
+				'title' => 'Test Sheet',
+				'tableId' => 'empty'
+			]
+		]);
+
+		$files = $this->configuration->getFiles($this->accountId);
+
+		/** @var File $file */
+		$file = array_shift($files);
+
+		// call the API
+		$this->httpClient->request(
+			'DELETE',
+			$this->componentName . '/files/' . $this->accountId . '/' . $file->getId()
+		);
+
+		$response = $this->httpClient->getResponse();
+
+		$this->assertEquals(204, $response->getStatusCode());
+
+		$filesInConfig = $this->configuration->getFiles($this->accountId);
+
+		$this->assertEmpty($filesInConfig);
 	}
 
 	/**
@@ -314,7 +380,7 @@ class FunctionalTest extends AbstractFunctionalTest
 		$referrerUrl = $this->httpClient
 			->getContainer()
 			->get('router')
-			->generate('keboola_google_drive_post_external_auth_link', [], true);
+			->generate('keboola_google_drive_writer_post_external_auth_link', [], true);
 
 		$this->httpClient->followRedirects();
 		$this->httpClient->request(

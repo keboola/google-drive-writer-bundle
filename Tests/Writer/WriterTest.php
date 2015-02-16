@@ -6,6 +6,7 @@
  */
 namespace Keboola\Google\DriveWriterBundle\Tests\Writer;
 
+use Keboola\Google\DriveWriterBundle\Writer\Configuration;
 use Keboola\Google\DriveWriterBundle\Writer\Writer;
 use Syrup\ComponentBundle\Test\WebTestCase;
 
@@ -13,6 +14,9 @@ class WriterTest extends WebTestCase
 {
     /** @var Writer */
     protected $writer;
+
+    /** @var Configuration */
+    protected $configuration;
 
     protected $httpClient;
 
@@ -37,6 +41,23 @@ class WriterTest extends WebTestCase
 //        $this->test3CsvPath = realpath(__DIR__ . '/../data/test3.csv');
 //        $this->expectedFeedPath = realpath(__DIR__ . '/../data/test-feed.xml');
 
+    }
+
+    protected function initEnv()
+    {
+        $this->googleId = GOOGLE_ID;
+        $this->googleName = GOOGLE_NAME;
+        $this->email = EMAIL;
+        $this->fileTitle = FILE_TITLE;
+        $this->tableId = TABLE_ID;
+    }
+
+    public function refreshTokenCallback($accessToken, $refreshToken)
+    {
+        $account = $this->configuration->getAccount($this->accountId);
+        $account->setAccessToken($accessToken);
+        $account->setRefreshToken($refreshToken);
+        $account->save();
     }
 
     /** Create new File */

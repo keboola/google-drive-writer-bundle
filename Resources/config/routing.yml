@@ -11,7 +11,7 @@ keboola_google_drive_writer_oauth_callback:
 # External Auth
 keboola_google_drive_writer_post_external_auth_link:
     path: /external-link
-    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDrive:postExternalAuthLink }
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:postExternalAuthLink }
     methods:  [POST]
 
 keboola_google_drive_writer_external_auth:
@@ -46,6 +46,12 @@ keboola_google_drive_writer_get_accounts:
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getAccounts, id: null }
     methods:  [GET]
 
+# Token
+keboola_google_drive_writer_get_access_token:
+    path: /access-token/{accountId}
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getAccessToken }
+    methods:  [GET]
+
 # Files
 keboola_google_drive_writer_get_files:
     path: /files/{accountId}
@@ -57,7 +63,17 @@ keboola_google_drive_writer_post_file:
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:postFiles }
     methods:  [POST]
 
+keboola_google_drive_writer_put_file:
+    path: /files/{accountId}/{fileId}
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:putFiles }
+    methods:  [PUT]
+
 keboola_google_drive_writer_get_remote_files:
     path: /remote-files/{accountId}
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getRemoteFiles }
     methods:  [GET]
+
+keboola_google_drive_writer_delete_file:
+    path: /files/{accountId}/{fileId}
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:deleteFile }
+    methods:  [DELETE]

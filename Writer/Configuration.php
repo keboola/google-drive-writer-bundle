@@ -105,6 +105,14 @@ class Configuration
 		unset($this->accounts[$accountId]);
 	}
 
+	public function deleteFile($accountId, $fileId)
+	{
+		/** @var Account $account */
+		$account = $this->getAccount($accountId);
+		$account->removeFile($fileId);
+		$account->save();
+	}
+
 	public function getConfig()
 	{
 		Reader::$client = $this->storageApi;
@@ -183,6 +191,13 @@ class Configuration
 		return null;
 	}
 
+	public function updateFile($accountId, $fileId, $params)
+	{
+		$account = $this->getAccount($accountId);
+		$account->updateFile($fileId, $params);
+		$account->save();
+	}
+
 	private function getAccountId()
 	{
 		$accountId = 0;
@@ -199,19 +214,6 @@ class Configuration
 	public function getIdFromName($name)
 	{
 		return strtolower(Table::removeSpecialChars($name));
-	}
-
-	public function removeSheet($accountId, $fileId, $sheetId)
-	{
-		/** @var Account $account */
-		$account = $this->getAccountBy('accountId', $accountId);
-
-		if (null == $account) {
-			throw new ConfigurationException("Account doesn't exist");
-		}
-
-		$account->removeSheet($fileId, $sheetId);
-		$account->save();
 	}
 
 	public function createToken()
