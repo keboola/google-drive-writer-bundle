@@ -137,6 +137,13 @@ class File
 		return $this->sheetId;
 	}
 
+    public function setOperation($operation)
+    {
+        $this->operation = $operation;
+
+        return $this;
+    }
+
 	public function isOperationCreate()
 	{
 		return ($this->operation == static::OPERATION_CREATE);
@@ -151,4 +158,16 @@ class File
 	{
 		return ($this->operation == static::OPERATION_APPEND);
 	}
+
+    public function setTargetFolder($folder)
+    {
+        $this->targetFolder = $folder;
+
+        return $this;
+    }
+
+    public function getTargetFolder()
+    {
+        return $this->targetFolder;
+    }
 }

@@ -53,6 +53,14 @@ class RestApi
 	{
 		$convert = ($file->getType() == File::TYPE_SHEET)?'true':'false';
 
+        $body = [
+            'title' => $file->getTitle()
+        ];
+
+        if (null != $file->getTargetFolder()) {
+            $body['parents'][] = ['id' => $file->getTargetFolder()];
+        }
+
 		$response = $this->api->request(
 			self::FILE_UPLOAD . '?uploadType=resumable&convert=' . $convert,
 			'POST',
@@ -61,9 +69,7 @@ class RestApi
 				'X-Upload-Content-Type' => 'text/csv',
 				'X-Upload-Content-Length' => filesize($file->getPathname())
 			],
-			json_encode([
-				'title' => $file->getTitle()
-			])
+			json_encode($body)
 		);
 
 		$locationUri = $response->getHeader('Location');
