@@ -198,14 +198,12 @@ class GoogleDriveWriterController extends ApiController
 	{
 		$params = $this->getPostJson($request);
 
-		foreach ($params as $fileData) {
-			$this->checkParams([
-				'tableId',
-				'title'
-			], $fileData);
-		}
+        $this->checkParams([
+            'tableId',
+            'title'
+        ], $params);
 
-		$this->configuration->addFiles($accountId, $params);
+		$this->configuration->addFile($accountId, $params);
 
 		$files = [];
 

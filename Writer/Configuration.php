@@ -232,15 +232,15 @@ class Configuration
 		return $this->getAccount($accountId)->getFiles();
 	}
 
-	public function addFiles($accountId, $files = [])
+	public function addFile($accountId, $fileData)
 	{
 		$account = $this->getAccount($accountId);
 
-		foreach ($files as $fileData) {
-			$fileData['id'] = $this->storageApi->generateId();
-			$account->addFile($fileData);
-		}
+        $fileData['id'] = $this->storageApi->generateId();
+        $account->addFile($fileData);
 
 		$account->save();
+
+        return $fileData['id'];
 	}
 }

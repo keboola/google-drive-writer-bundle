@@ -35,10 +35,7 @@ class FunctionalTest extends AbstractFunctionalTest
 	protected $accessToken = 'accessToken';
 	protected $refreshToken = 'refreshToken';
 
-//	protected $fileGoogleId;
 	protected $fileTitle;
-//	protected $fileType;
-//	protected $sheetId;
 	protected $tableId = 'in.c-wr-google-drive.test';
 
 	protected $testCsvPath;
@@ -258,12 +255,10 @@ class FunctionalTest extends AbstractFunctionalTest
 			[],
 			[],
 			json_encode([
-				[
-					'tableId' => $this->tableId,
-					'title' => $this->fileTitle,
-					'type' => 'file'
-				]
-			])
+                'tableId' => $this->tableId,
+                'title' => $this->fileTitle,
+                'type' => 'file'
+            ])
 		);
 
 		$response = $this->httpClient->getResponse();
@@ -280,6 +275,41 @@ class FunctionalTest extends AbstractFunctionalTest
 		$this->assertEquals('file', $file->getType());
 		$this->assertEquals($this->tableId, $file->getTableId());
 	}
+
+    public function testPutFiles()
+    {
+        $this->createConfig();
+        $this->createAccount();
+
+        // add file to config
+        $fileId = $this->configuration->addFile($this->accountId, [
+            'title' => 'Test Sheet',
+            'tableId' => 'empty',
+            'type' => 'sheet',
+            'pathname' => $this->testCsvPath
+        ]);
+
+        // call the API
+        $this->httpClient->request(
+            'PUT',
+            $this->componentName . '/files/' . $this->accountId . '/' . $fileId,
+            [],
+            [],
+            [],
+            json_encode([
+                'title' => 'Test Sheet Update',
+                'tableId' => 'updated'
+            ])
+        );
+
+        $response = $this->httpClient->getResponse();
+
+        $resFile = array_shift(json_decode($response->getContent(), true));
+
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals('Test Sheet Update', $resFile['title']);
+        $this->assertEquals('updated', $resFile['tableId']);
+    }
 
 	public function testGetFiles()
 	{
@@ -303,10 +333,8 @@ class FunctionalTest extends AbstractFunctionalTest
 			'pathname' => $this->testCsvPath
 		]);
 
-		$this->configuration->addFiles($this->accountId, [
-			$file->toArray(),
-			$file2->toArray()
-		]);
+		$this->configuration->addFile($this->accountId, $file->toArray());
+        $this->configuration->addFile($this->accountId, $file2->toArray());
 
 		// call the API
 		$this->httpClient->request(
@@ -341,11 +369,9 @@ class FunctionalTest extends AbstractFunctionalTest
 		$this->createAccount();
 
 		// add files to config
-		$this->configuration->addFiles($this->accountId, [
-			[
-				'title' => 'Test Sheet',
-				'tableId' => 'empty'
-			]
+		$this->configuration->addFile($this->accountId, [
+            'title' => 'Test Sheet',
+            'tableId' => 'empty'
 		]);
 
 		$files = $this->configuration->getFiles($this->accountId);
