@@ -53,8 +53,10 @@ class RestApi
 	{
 		$convert = ($file->getType() == File::TYPE_SHEET)?'true':'false';
 
+        $title = $file->isOperationCreate()?$file->getTitle() . ' (' . date('Y-m-d H:i:s') . ')':$file->getTitle();
+
         $body = [
-            'title' => $file->getTitle()
+            'title' => $title
         ];
 
         if (null != $file->getTargetFolder()) {

@@ -81,7 +81,7 @@ class RestApiTest extends WebTestCase
 		$this->assertArrayHasKey('kind', $response);
 		$this->assertEquals('drive#file', $response['kind']);
 		$this->assertArrayHasKey('title', $response);
-		$this->assertEquals($file->getTitle(), $response['title']);
+		$this->assertContains($file->getTitle(), $response['title']);
 
 		// cleanup
 		$file->setGoogleId($response['id']);
