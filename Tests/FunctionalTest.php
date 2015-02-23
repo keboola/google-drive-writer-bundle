@@ -355,12 +355,18 @@ class FunctionalTest extends AbstractFunctionalTest
 		$this->assertEquals('Test Sheet', $fileInConfig['title']);
 		$this->assertEquals('empty', $fileInConfig['tableId']);
 		$this->assertEquals('sheet', $fileInConfig['type']);
+        $this->assertEquals(File::OPERATION_UPDATE, $fileInConfig['operation']);
+        $this->assertArrayHasKey('targetFolder', $fileInConfig);
+        $this->assertArrayHasKey('sheetId', $fileInConfig);
 
 		$fileInConfig = array_shift($files);
 
 		$this->assertEquals('Test File', $fileInConfig['title']);
 		$this->assertEquals('empty2', $fileInConfig['tableId']);
 		$this->assertEquals('file', $fileInConfig['type']);
+        $this->assertEquals(File::OPERATION_UPDATE, $fileInConfig['operation']);
+        $this->assertArrayHasKey('targetFolder', $fileInConfig);
+        $this->assertArrayHasKey('sheetId', $fileInConfig);
 	}
 
 	public function testDeleteFile()
@@ -393,6 +399,11 @@ class FunctionalTest extends AbstractFunctionalTest
 
 		$this->assertEmpty($filesInConfig);
 	}
+
+    public function testGetRemoteFile()
+    {
+        //@todo
+    }
 
 	/**
 	 * External

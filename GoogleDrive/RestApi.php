@@ -107,6 +107,11 @@ class RestApi
 		], fopen($file->getPathname(), 'r'))->json();
 	}
 
+    public function getFile($id)
+    {
+        return $this->api->call(self::FILE_METADATA . '/' . $id, 'GET')->json();
+    }
+
 	public function deleteFile(File $file)
 	{
 		return $this->api->call(self::FILE_METADATA . '/' . $file->getGoogleId(), 'DELETE');
@@ -278,5 +283,6 @@ class RestApi
 		}
 		return $cnt;
 	}
+
 
 }

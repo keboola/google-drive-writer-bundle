@@ -112,6 +112,13 @@ class Writer
 		return $this->googleDriveApi->listFiles($params);
 	}
 
+    public function getFile(Account $account, $fileGoogleId)
+    {
+        $this->initApi($account);
+
+        return $this->googleDriveApi->getFile($fileGoogleId);
+    }
+
 	public function refreshToken(Account $account)
 	{
 		$this->initApi($account);

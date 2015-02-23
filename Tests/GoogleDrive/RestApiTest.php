@@ -88,6 +88,24 @@ class RestApiTest extends WebTestCase
 		$this->restApi->deleteFile($file);
 	}
 
+    public function testGetFile()
+    {
+        $file = $this->createTestFile();
+        $resFile = $this->restApi->insertFile($file);
+
+        $response = $this->restApi->getFile($resFile['id']);
+
+        $this->assertNotEmpty($response);
+        $this->assertArrayHasKey('kind', $response);
+        $this->assertEquals('drive#file', $response['kind']);
+        $this->assertArrayHasKey('title', $response);
+        $this->assertContains($file->getTitle(), $response['title']);
+
+        // cleanup
+        $file->setGoogleId($response['id']);
+        $this->restApi->deleteFile($file);
+    }
+
 	public function testGetWorksheets()
 	{
 		$file = $this->createTestFile();

@@ -73,6 +73,11 @@ keboola_google_drive_writer_get_remote_files:
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getRemoteFiles }
     methods:  [GET]
 
+keboola_google_drive_writer_get_remote_file:
+    path: /remote-file/{accountId}/{fileGoogleId}
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getRemoteFile }
+    methods:  [GET]
+
 keboola_google_drive_writer_delete_file:
     path: /files/{accountId}/{fileId}
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:deleteFile }

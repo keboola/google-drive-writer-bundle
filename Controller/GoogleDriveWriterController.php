@@ -252,11 +252,18 @@ class GoogleDriveWriterController extends ApiController
 		/** @var Writer $writer */
 		$writer = $this->container->get('wr_google_drive.writer');
 
-		$response = $writer->listFiles($account, $params);
-
-
-		return $this->createJsonResponse($response);
+		return $this->createJsonResponse($writer->listFiles($account, $params));
 	}
+
+    public function getRemoteFileAction($accountId, $fileGoogleId)
+    {
+        $account = $this->configuration->getAccount($accountId);
+
+        /** @var Writer $writer */
+        $writer = $this->container->get('wr_google_drive.writer');
+
+        return $this->createJsonResponse($writer->getFile($account, $fileGoogleId));
+    }
 
 	/**
 	 * @param $accountId

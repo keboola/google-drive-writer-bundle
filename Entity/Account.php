@@ -14,7 +14,7 @@ use Keboola\StorageApi\Table;
 
 class Account extends Table
 {
-	protected $header = array('id', 'title', 'googleId', 'type', 'sheetId', 'tableId', 'incremental', 'targetFolder', 'targetFilename');
+	protected $header = array('id', 'title', 'googleId', 'type', 'sheetId', 'tableId', 'operation', 'targetFolder');
 
 	protected $accountId;
 
