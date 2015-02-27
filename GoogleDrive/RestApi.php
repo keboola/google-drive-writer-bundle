@@ -8,7 +8,6 @@
 
 namespace Keboola\Google\DriveWriterBundle\GoogleDrive;
 
-use GuzzleHttp\Exception\BadResponseException;
 use Keboola\Csv\CsvFile;
 use Keboola\Google\ClientBundle\Google\RestApi as GoogleApi;
 use Keboola\Google\DriveWriterBundle\Entity\File;

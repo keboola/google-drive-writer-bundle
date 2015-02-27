@@ -88,11 +88,8 @@ class GoogleDriveWriterController extends ApiController
 			throw new UserException("Account not authorized yet");
 		}
 
-		/** @var Writer $writer */
-		$writer = $this->container->get('wr_google_drive.writer');
-
 		return $this->createJsonResponse([
-			'token' => $writer->refreshToken($account),
+			'token' => $this->getWriter($account)->refreshToken($account),
 			'apiKey' => $this->container->getParameter('google.browser-key')
 		]);
 	}
