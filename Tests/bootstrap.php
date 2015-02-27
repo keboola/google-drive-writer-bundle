@@ -16,5 +16,7 @@ setupConst('GOOGLE_NAME');
 setupConst('EMAIL');
 setupConst('ACCESS_TOKEN');
 setupConst('REFRESH_TOKEN');
+setupConst('TABLE_ID');
+setupConst('FILE_TITLE');
 
 require_once __DIR__ . '/../vendor/autoload.php';
