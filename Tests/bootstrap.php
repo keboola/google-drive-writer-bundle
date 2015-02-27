@@ -2,9 +2,9 @@
 
 ini_set('memory_limit', '256M');
 
-if (file_exists(__DIR__ . '/config.php')) {
-	require_once __DIR__ . '/config.php';
-}
+//if (file_exists(__DIR__ . '/config.php')) {
+//	require_once __DIR__ . '/config.php';
+//}
 
 function setupConst($name, $default=null)
 {

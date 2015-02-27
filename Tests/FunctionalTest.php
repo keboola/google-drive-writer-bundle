@@ -211,6 +211,8 @@ class FunctionalTest extends AbstractFunctionalTest
 
 		$this->httpClient->request('GET', $this->componentName . '/accounts/' . $this->accountId);
 
+        $this->assertEquals(200, $this->httpClient->getResponse()->getStatusCode());
+
 		$responseJson = $this->httpClient->getResponse()->getContent();
 		$response = json_decode($responseJson, true);
 
