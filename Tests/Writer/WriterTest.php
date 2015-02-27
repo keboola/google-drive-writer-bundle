@@ -7,7 +7,6 @@
 namespace Keboola\Google\DriveWriterBundle\Tests\Writer;
 
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
-use Keboola\Google\DriveWriterBundle\Writer\Writer;
 use Keboola\Google\DriveWriterBundle\Writer\WriterFactory;
 use Syrup\ComponentBundle\Test\WebTestCase;
 
@@ -51,7 +50,6 @@ class WriterTest extends WebTestCase
         $this->googleId = GOOGLE_ID;
         $this->googleName = GOOGLE_NAME;
         $this->email = EMAIL;
-        $this->fileTitle = FILE_TITLE;
         $this->tableId = TABLE_ID;
     }
 

@@ -445,7 +445,31 @@ class FunctionalTest extends AbstractFunctionalTest
 
 	public function testRun()
 	{
-		//@TODO
-	}
+        $this->createConfig();
+        $this->createAccount();
+
+        // add files to config
+        $file = new File([
+            'id' => 0,
+            'title' => 'Test Sheet',
+            'tableId' => $this->tableId,
+            'type' => 'sheet'
+        ]);
+
+        $file2 = new File([
+            'id' => 1,
+            'title' => 'Test File',
+            'tableId' => $this->tableId,
+            'type' => 'file'
+        ]);
+
+        $this->configuration->addFile($this->accountId, $file->toArray());
+        $this->configuration->addFile($this->accountId, $file2->toArray());
+
+        // run
+        $job = $this->processJob($this->componentName . '/run');
+
+        $this->assertEquals('success', $job->getStatus());
+    }
 
 }
