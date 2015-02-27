@@ -35,7 +35,7 @@ class FunctionalTest extends AbstractFunctionalTest
 	protected $accessToken = 'accessToken';
 	protected $refreshToken = 'refreshToken';
 
-	protected $fileTitle;
+	protected $fileTitle = 'Google Drive TEST';
 	protected $tableId = 'in.c-wr-google-drive.test';
 
 	protected $testCsvPath;
@@ -92,7 +92,6 @@ class FunctionalTest extends AbstractFunctionalTest
 		$this->email = EMAIL;
 		$this->accessToken = $this->encryptor->decrypt(ACCESS_TOKEN);
 		$this->refreshToken = $this->encryptor->decrypt(REFRESH_TOKEN);
-		$this->fileTitle = FILE_TITLE;
 		$this->tableId = TABLE_ID;
 	}
 
