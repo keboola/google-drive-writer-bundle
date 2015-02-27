@@ -164,7 +164,7 @@ class GoogleDriveWriterController extends ApiController
 	public function getAccountsAction($id)
 	{
 		if ($id != null) {
-			return $this->createJsonResponse($this->configuration->getAccountBy('accountId', $id, true));
+			return $this->createJsonResponse($this->configuration->getAccount($id)->toArray());
 		}
 		return $this->createJsonResponse($this->configuration->getAccounts(true));
 	}
@@ -249,14 +249,14 @@ class GoogleDriveWriterController extends ApiController
 		$account = $this->configuration->getAccount($accountId);
 		$params = $request->query->all();
 
-		return $this->createJsonResponse($this->getWriter($account)->listFiles($account, $params));
+		return $this->createJsonResponse($this->getWriter($account)->listFiles($params));
 	}
 
     public function getRemoteFileAction($accountId, $fileGoogleId)
     {
         $account = $this->configuration->getAccount($accountId);
 
-        return $this->createJsonResponse($this->getWriter($account)->getFile($account, $fileGoogleId));
+        return $this->createJsonResponse($this->getWriter($account)->getFile($fileGoogleId));
     }
 
 	/**
