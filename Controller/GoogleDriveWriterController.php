@@ -164,7 +164,9 @@ class GoogleDriveWriterController extends ApiController
 	public function getAccountsAction($id)
 	{
 		if ($id != null) {
-			return $this->createJsonResponse($this->configuration->getAccount($id)->toArray());
+			return $this->createJsonResponse($this->configuration->getAccount($id)->toArray(), 200, [
+                'X-Google-ApiKey' => $this->container->getParameter('google.browser-key')
+            ]);
 		}
 		return $this->createJsonResponse($this->configuration->getAccounts(true));
 	}
