@@ -8,6 +8,7 @@
 namespace Keboola\Google\DriveWriterBundle\Controller;
 
 
+use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\Exception\ConfigurationException;
 use Keboola\Google\DriveWriterBundle\Exception\ParameterMissingException;
@@ -246,23 +247,16 @@ class GoogleDriveWriterController extends ApiController
 	public function getRemoteFilesAction($accountId, Request $request)
 	{
 		$account = $this->configuration->getAccount($accountId);
-
 		$params = $request->query->all();
 
-		/** @var Writer $writer */
-		$writer = $this->container->get('wr_google_drive.writer');
-
-		return $this->createJsonResponse($writer->listFiles($account, $params));
+		return $this->createJsonResponse($this->getWriter($account)->listFiles($account, $params));
 	}
 
     public function getRemoteFileAction($accountId, $fileGoogleId)
     {
         $account = $this->configuration->getAccount($accountId);
 
-        /** @var Writer $writer */
-        $writer = $this->container->get('wr_google_drive.writer');
-
-        return $this->createJsonResponse($writer->getFile($account, $fileGoogleId));
+        return $this->createJsonResponse($this->getWriter($account)->getFile($account, $fileGoogleId));
     }
 
 	/**
@@ -277,4 +271,12 @@ class GoogleDriveWriterController extends ApiController
 		return $this->createJsonResponse([], 204);
 	}
 
+    /**
+     * @param Account $account
+     * @return Writer
+     */
+    protected function getWriter(Account $account)
+    {
+        return $this->container->get('wr_google_drive.writer_factory')->create($account);
+    }
 }

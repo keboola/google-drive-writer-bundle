@@ -8,17 +8,20 @@ namespace Keboola\Google\DriveWriterBundle\Tests\Writer;
 
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
 use Keboola\Google\DriveWriterBundle\Writer\Writer;
+use Keboola\Google\DriveWriterBundle\Writer\WriterFactory;
 use Syrup\ComponentBundle\Test\WebTestCase;
 
 class WriterTest extends WebTestCase
 {
-    /** @var Writer */
-    protected $writer;
+    /** @var WriterFactory */
+    protected $writerFactory;
 
     /** @var Configuration */
     protected $configuration;
 
     protected $httpClient;
+
+    protected $accountId;
 
     public function setUp()
     {
@@ -34,7 +37,7 @@ class WriterTest extends WebTestCase
         $restApi->getApi()->setCredentials($accessToken, $refreshToken);
         $restApi->getApi()->setRefreshTokenCallback(array($this, 'refreshTokenCallback'));
 
-        $this->writer = $container->get('wr_google_drive.writer');
+        $this->writerFactory = $container->get('wr_google_drive.writer_factory');
 
 //        $this->testCsvPath = realpath(__DIR__ . '/../data/test.csv');
 //        $this->test2CsvPath = realpath(__DIR__ . '/../data/test2.csv');

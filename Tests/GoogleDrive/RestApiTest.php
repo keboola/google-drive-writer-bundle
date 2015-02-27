@@ -157,6 +157,37 @@ class RestApiTest extends WebTestCase
 		$this->restApi->deleteFile($file);
 	}
 
+    public function testCreateWorksheet()
+    {
+        // create new file type='sheet'
+        $file = $this->createTestFile();
+        $fileRes = $this->restApi->insertFile($file);
+
+        // this file now has one empty sheet
+        $sheets = $this->restApi->getWorksheets($fileRes['id']);
+        $sheet = array_shift($sheets);
+        $file->setGoogleId($fileRes['id']);
+        $file->setSheetId($sheet['wsid']);
+
+        // create second sheet in the same file
+        $file2 = new File([
+            'id' => 1,
+            'title' => 'Test Sheet2',
+            'googleId' => $fileRes['id'],
+            'tableId' => 'empty',
+            'type' => 'sheet',
+            'pathname' => $this->test2CsvPath
+        ]);
+
+        // create new worksheet
+        $response = $this->restApi->createWorksheet($file2);
+
+        $this->assertEquals(201, $response->getStatusCode());
+
+        // cleanup
+        $this->restApi->deleteFile($file);
+    }
+
 	public function testUpdateWorksheet()
 	{
 		$file = $this->createTestFile();
@@ -170,7 +201,7 @@ class RestApiTest extends WebTestCase
 
 		$response = $this->restApi->updateWorksheet($file);
 
-		$this->assertNotEmpty($response);
+		$this->assertEquals(200, $response->getStatusCode());
 
 		// cleanup
 		$this->restApi->deleteFile($file);
@@ -189,7 +220,7 @@ class RestApiTest extends WebTestCase
 		// update sheet size
 		$this->restApi->updateWorksheet($file);
 
-		$xmlFeed = $this->restApi->updateCells($file);
+		$xmlFeed = $this->restApi->updateCells($file)->getBody()->getContents();
 
 		$crawler = new Crawler($xmlFeed);
 
@@ -203,10 +234,4 @@ class RestApiTest extends WebTestCase
 		// cleanup
 		$this->restApi->deleteFile($file);
 	}
-
-	public function testInsertSecondSheet()
-	{
-
-	}
-
 }

@@ -11,16 +11,17 @@ namespace Keboola\Google\DriveWriterBundle\Job;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
-use Keboola\Google\DriveWriterBundle\Writer\Writer;
+use Keboola\Google\DriveWriterBundle\Writer\WriterFactory;
 use Keboola\Temp\Temp;
+use Monolog\Logger;
 use Syrup\ComponentBundle\Exception\UserException;
 use Syrup\ComponentBundle\Job\Executor as BaseExecutor;
 use Syrup\ComponentBundle\Job\Metadata\Job;
 
 class Executor extends BaseExecutor
 {
-	/** @var Writer */
-	protected $writer;
+	/** @var WriterFactory */
+	protected $writerFactory;
 
 	/** @var Configuration */
 	protected $configuration;
@@ -28,11 +29,15 @@ class Executor extends BaseExecutor
 	/** @var Temp */
 	protected $temp;
 
-	public function __construct(Writer $writer, Configuration $configuration, Temp $temp)
+    /** @var Logger */
+    protected $logger;
+
+	public function __construct(WriterFactory $writerFactory, Configuration $configuration, Temp $temp, Logger $logger)
 	{
-		$this->writer = $writer;
+		$this->writerFactory = $writerFactory;
 		$this->configuration = $configuration;
 		$this->temp = $temp;
+        $this->logger = $logger;
 	}
 
 	public function execute(Job $job)
@@ -43,6 +48,7 @@ class Executor extends BaseExecutor
 
 		$options = $job->getParams();
 
+        $fileFilter = null;
 		if (isset($options['config'])) {
 			if (!isset($accounts[$options['config']])) {
 				throw new UserException("Config '" . $options['config'] . "' does not exist.");
@@ -50,6 +56,17 @@ class Executor extends BaseExecutor
 			$accounts = [
 				$options['config'] => $accounts[$options['config']]
 			];
+
+            if (isset($options['file'])) {
+
+                /** @var Account $account */
+                $account = $accounts[$options['config']];
+                if (null == $account->getFile($options['file'])) {
+                    throw new UserException("File '" . $options['file'] . "' not found");
+                }
+
+                $fileFilter = $options['file'];
+            }
 		}
 
 		$status = [];
@@ -57,21 +74,20 @@ class Executor extends BaseExecutor
 		/** @var Account $account */
 		foreach ($accounts as $accountId => $account) {
 
-			$this->writer->initApi($account);
-
+            $writer = $this->writerFactory->create($account);
 			$files = $account->getFiles();
 
 			/** @var File $file */
 			foreach ($files as $file) {
 
+                if ($fileFilter != null && $file->getId() != $fileFilter) {
+                    continue;
+                }
+
 				$file->setPathname($this->temp->createTmpFile()->getPathname());
 				$this->storageApi->exportTable($file->getTableId(), $file->getPathname());
 
-				if ($file->getType() == File::TYPE_FILE) {
-					$this->writer->processFile($file);
-				} else {
-					$this->writer->processSheet($file);
-				}
+				$file = $writer->process($file);
 
 				$status[$account->getAccountName()][$file->getTitle()] = 'ok';
 			}

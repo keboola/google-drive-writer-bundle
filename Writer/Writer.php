@@ -12,9 +12,12 @@ use GuzzleHttp\Exception\BadResponseException;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
+use Keboola\Google\DriveWriterBundle\Writer\Processor\FileProcessor;
+use Keboola\Google\DriveWriterBundle\Writer\Processor\ProcessorInterface;
+use Keboola\Google\DriveWriterBundle\Writer\Processor\SheetProcessor;
 use Monolog\Logger;
+use Syrup\ComponentBundle\Exception\ApplicationException;
 use Syrup\ComponentBundle\Exception\UserException;
-use Syrup\ComponentBundle\Filesystem\Temp;
 
 class Writer
 {
@@ -24,113 +27,75 @@ class Writer
 	/** @var Logger */
 	protected $logger;
 
-//	/** @var Configuration */
-//	protected $configuration;
-
-//	/** @var Client */
-//	protected $storageApi;
-
 	/** @var Account */
 	protected $currAccount;
 
+    /** @var ProcessorInterface */
+    protected $processor;
 
-	public function __construct(RestApi $googleDriveApi, Logger $logger)
+	public function __construct(RestApi $googleDriveApi, Logger $logger, Account $account)
 	{
 		$this->googleDriveApi = $googleDriveApi;
 		$this->logger = $logger;
+        $this->currAccount = $account;
+        $this->initApi();
 	}
 
-//	public function setConfiguration($configuration)
-//	{
-//		$this->configuration = $configuration;
-//		$this->storageApi = $this->configuration->getStorageApi();
-//	}
+    public function remoteFileExists(File $file)
+    {
+        if ($file->getGoogleId() == null) {
+            return false;
+        }
 
-	public function processFile(File $file)
+        try {
+            $remoteFile = $this->getFile($file->getGoogleId());
+
+            if ($remoteFile['labels']['trashed'] === false) {
+                // file is in trash
+                return false;
+            }
+
+            return true;
+        } catch (BadResponseException $e) {
+            if ($e->getResponse()->getStatusCode() == 404) {
+                return false;
+            }
+
+            throw $e;
+        }
+    }
+
+    public function process(File $file)
+    {
+        if ($this->remoteFileExists($file)) {
+            $file->setGoogleId(null);
+            $file->setSheetId(null);
+        }
+
+        $this->processor = $this->getProcessor($file->getType());
+
+        return $this->processor->process($file);
+    }
+
+	public function listFiles($params = [])
 	{
-		if (null == $file->getGoogleId() || $file->isOperationCreate()) {
-
-			// create new file
-			$response = $this->googleDriveApi->insertFile($file);
-
-			// update file with googleId
-			$file->setGoogleId($response['id']);
-
-		} else {
-			// overwrite existing file
-			try {
-				$response = $this->googleDriveApi->updateFile($file);
-
-			} catch (BadResponseException $e) {
-				$statusCode = $e->getResponse()->getStatusCode();
-
-				if ($statusCode == 404) {
-
-					// file not found - create new one and issue a warning
-					$response = $this->googleDriveApi->insertFile($file);
-					$file->setGoogleId($response['id']);
-				}
-
-			}
-		}
-
-		return $file;
-	}
-
-	public function processSheet(File $file)
-	{
-		if (null == $file->getGoogleId() || null == $file->getSheetId() || $file->isOperationCreate()) {
-
-			// create new file
-			$fileRes = $this->googleDriveApi->insertFile($file);
-
-			// get list of worksheets in file, there shall be only one
-			$sheets = $this->googleDriveApi->getWorksheets($fileRes['id']);
-			$sheet = array_shift($sheets);
-
-			// update file
-			$file->setGoogleId($fileRes['id']);
-			$file->setSheetId($sheet['wsid']);
-
-		} else if ($file->isOperationUpdate()) {
-
-			// update content of existing file
-			$response = $this->googleDriveApi->updateCells($file);
-
-		} else {
-
-			// @TODO: append sheet
-		}
-
-		return $file;
-	}
-
-	public function listFiles(Account $account, $params = [])
-	{
-		$this->initApi($account);
-
 		return $this->googleDriveApi->listFiles($params);
 	}
 
-    public function getFile(Account $account, $fileGoogleId)
+    public function getFile($fileGoogleId)
     {
-        $this->initApi($account);
-
         return $this->googleDriveApi->getFile($fileGoogleId);
     }
 
-	public function refreshToken(Account $account)
+	public function refreshToken()
 	{
-		$this->initApi($account);
-
 		$response = $this->googleDriveApi->getApi()->refreshToken();
 		return $response['access_token'];
 	}
 
-	public function initApi(Account $account)
+	protected function initApi()
 	{
-		$this->currAccount = $account;
-		$this->googleDriveApi->getApi()->setCredentials($account->getAccessToken(), $account->getRefreshToken());
+		$this->googleDriveApi->getApi()->setCredentials($this->currAccount->getAccessToken(), $this->currAccount->getRefreshToken());
 		$this->googleDriveApi->getApi()->setRefreshTokenCallback(array($this, 'refreshTokenCallback'));
 	}
 
@@ -141,5 +106,17 @@ class Writer
 		$account->setRefreshToken($refreshToken);
 		$account->save();
 	}
+
+    protected function getProcessor($fileType)
+    {
+        switch ($fileType) {
+            case File::TYPE_FILE:
+                return new FileProcessor($this->googleDriveApi, $this->logger);
+            case File::TYPE_SHEET:
+                return new SheetProcessor($this->googleDriveApi, $this->logger);
+            default:
+                throw new UserException("Unknown file type");
+        }
+    }
 
 }

@@ -147,8 +147,35 @@ class RestApi
 					'worksheetId' => $file->getSheetId()
 				]
 			)
-		)->getBody()->getContents();
+		);
 	}
+
+    public function createWorksheet(File $file)
+    {
+        $csvFile = new CsvFile($file->getPathname());
+        $colCount = $csvFile->getColumnsCount();
+        $rowCount = $this->countLines($csvFile);
+
+        $entryXml = $this->templating->render(
+            'KeboolaGoogleDriveWriterBundle:Feed:Worksheet/entry.xml.twig',
+            [
+                'title' => $file->getTitle(),
+                'cols' => $colCount,
+                'rows' => $rowCount
+            ]
+        );
+
+        return $this->api->call(
+            sprintf(self::SPREADSHEET_WORKSHEETS . '/%s/private/full', $file->getGoogleId()),
+            'POST',
+            [
+                'Accept'        => 'application/atom+xml',
+                'Content-Type'  => 'application/atom+xml',
+                'GData-Version' => '3.0',
+            ],
+            $entryXml
+        );
+    }
 
 	public function updateWorksheet(File $file)
 	{
@@ -196,7 +223,7 @@ class RestApi
 				'If-Match' => '*'
 			],
 			$entryXml
-		)->getBody()->getContents();
+		);
 	}
 
 	public function getWorksheetsFeed($fileId, $json = true)

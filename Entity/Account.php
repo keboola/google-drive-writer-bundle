@@ -224,13 +224,6 @@ class Account extends Table
 
 	public function addFile($fileData)
 	{
-		/** @var File $file */
-		foreach ($this->files as $file) {
-			if ($file->getTableId() == $fileData['tableId']) {
-				throw new ConfigurationException("File already exists");
-			}
-		}
-
 		$this->files[] = new File($fileData);
 
 		return $this;
