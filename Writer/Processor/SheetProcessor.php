@@ -54,10 +54,10 @@ class SheetProcessor extends CommonProcessor
                     $this->googleDriveApi->updateWorksheet($file);
 
                     // update cells content
-                    $cellFeed = $this->googleDriveApi->updateCells($file);
+                    $response = $this->googleDriveApi->updateCells($file);
 
                     // crawl through response
-                    $crawler = new Crawler($cellFeed);
+                    $crawler = new Crawler($response->getBody()->getContents());
 
                     /** @var \DOMElement $entry */
                     foreach ($crawler->filter('default|entry batch|status') as $entry) {
