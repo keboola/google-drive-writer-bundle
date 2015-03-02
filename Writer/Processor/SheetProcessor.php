@@ -53,18 +53,26 @@ class SheetProcessor extends CommonProcessor
                     // update metadata first - cols and rows count
                     $this->googleDriveApi->updateWorksheet($file);
 
+                    $this->logger->debug("Worksheet metadata updated", [
+                        'file' => $file->toArray()
+                    ]);
+
                     // update cells content
                     $response = $this->googleDriveApi->updateCells($file);
 
-                    // crawl through response
-                    $crawler = new Crawler($response->getBody()->getContents());
+                    $this->logger->debug("Worksheet cells updated", [
+                        'file' => $file
+                    ]);
 
-                    /** @var \DOMElement $entry */
-                    foreach ($crawler->filter('default|entry batch|status') as $entry) {
-                        if ('Success' != $entry->getAttribute('reason')) {
-                            throw new UserException("Update failed: " . $entry->getAttribute('reason'));
-                        }
-                    }
+                    // crawl through response - disabled - was too slow
+//                    $crawler = new Crawler($response->getBody()->getContents());
+//
+//                    /** @var \DOMElement $entry */
+//                    foreach ($crawler->filter('default|entry batch|status') as $entry) {
+//                        if ('Success' != $entry->getAttribute('reason')) {
+//                            throw new UserException("Update failed: " . $entry->getAttribute('reason'));
+//                        }
+//                    }
 
                 } catch (RequestException $e) {
                     throw new UserException("Update failed: " . $e->getMessage(), $e, [
