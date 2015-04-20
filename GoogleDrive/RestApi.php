@@ -132,15 +132,16 @@ class RestApi
         $csvFile = new CsvFile($file->getPathname());
 
         $limit = 500;
+        $offset = 0;
         $rowCnt = $this->countLines($csvFile);
+        $responses = [];
 
         if ($rowCnt > $limit) {
-            $offset = 0;
 
             // request is decomposed to several smaller requests, response is thrown away
             for ($i=0;$i<=intval($rowCnt/$limit);$i++) {
 
-                $this->api->call(
+                $responses[] = $this->api->call(
                     sprintf(self::SPREADSHEET_CELL_BATCH, $file->getGoogleId(), $file->getSheetId()),
                     'POST',
                     [
@@ -165,7 +166,8 @@ class RestApi
             }
 
         } else {
-            return $this->api->call(
+
+            $responses[] = $this->api->call(
                 sprintf(self::SPREADSHEET_CELL_BATCH, $file->getGoogleId(), $file->getSheetId()),
                 'POST',
                 [
@@ -179,11 +181,15 @@ class RestApi
                     [
                         'csv' => $csvFile,
                         'fileId' => $file->getGoogleId(),
-                        'worksheetId' => $file->getSheetId()
+                        'worksheetId' => $file->getSheetId(),
+                        'limit' => $limit,
+                        'offset' => $offset
                     ]
                 )
             );
         }
+
+        return $responses;
 	}
 
     public function createWorksheet(File $file)
@@ -344,6 +350,7 @@ class RestApi
 		foreach ($csvFile as $row) {
 			$cnt++;
 		}
+        $csvFile->rewind();
 		return $cnt;
 	}
 

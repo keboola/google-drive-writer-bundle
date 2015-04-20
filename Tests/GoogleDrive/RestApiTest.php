@@ -7,6 +7,7 @@
 
 namespace Keboola\Google\DriveWriterBundle\Tests\GoogleDrive;
 
+use GuzzleHttp\Message\Response;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
 use Symfony\Component\CssSelector\CssSelector;
@@ -53,7 +54,7 @@ class RestApiTest extends WebTestCase
 	protected function initApi($accessToken, $refreshToken)
 	{
 		$this->restApi->getApi()->setCredentials($accessToken, $refreshToken);
-		$this->restApi->getApi()->setRefreshTokenCallback(array($this, 'refreshTokenCallback'));
+		$this->restApi->getApi()->setRefreshTokenCallback([$this, 'refreshTokenCallback']);
 	}
 
 	public function refreshTokenCallback($accessToken, $refreshToken)
@@ -220,16 +221,24 @@ class RestApiTest extends WebTestCase
 		// update sheet size
 		$this->restApi->updateWorksheet($file);
 
-		$xmlFeed = $this->restApi->updateCells($file)->getBody()->getContents();
+        /** @var Response $res */
+        $responses = $this->restApi->updateCells($file);
+        $res = $responses[0];
 
-		$crawler = new Crawler($xmlFeed);
+        $this->assertEquals(200, $res->getStatusCode());
 
-		CssSelector::disableHtmlExtension();
+        $xmlFeed = $res->getBody()->getContents();
 
-		/** @var \DOMElement $entry */
-		foreach ($crawler->filter('default|entry batch|status') as $entry) {
-			$this->assertEquals('Success', $entry->getAttribute('reason'));
-		}
+        $crawler = new Crawler($xmlFeed);
+
+        CssSelector::disableHtmlExtension();
+
+        $this->assertNotEmpty($crawler->filter('default|entry batch|status'));
+
+        /** @var \DOMElement $entry */
+        foreach ($crawler->filter('default|entry batch|status') as $entry) {
+            $this->assertEquals('Success', $entry->getAttribute('reason'));
+        }
 
 		// cleanup
 		$this->restApi->deleteFile($file);

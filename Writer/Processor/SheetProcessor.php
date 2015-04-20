@@ -7,6 +7,7 @@
 
 namespace Keboola\Google\DriveWriterBundle\Writer\Processor;
 
+use GuzzleHttp\Message\Response;
 use GuzzleHttp\Exception\RequestException;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Symfony\Component\DomCrawler\Crawler;
@@ -58,21 +59,26 @@ class SheetProcessor extends CommonProcessor
                     ]);
 
                     // update cells content
-                    $response = $this->googleDriveApi->updateCells($file);
+                    $responses = $this->googleDriveApi->updateCells($file);
+
+                    // log responses for debug
+                    $resBodies = [];
+                    foreach ($responses as $res) {
+                        /** @var Response  $res */
+                        $resBodies[] = $this->parseXmlResponse($res->getBody()->getContents());
+                    }
 
                     $this->logger->debug("Worksheet cells updated", [
-                        'file' => $file
+                        'file' => $file->toArray(),
+                        'responses' => $resBodies
                     ]);
 
-                    // crawl through response - disabled - was too slow
-//                    $crawler = new Crawler($response->getBody()->getContents());
-//
-//                    /** @var \DOMElement $entry */
-//                    foreach ($crawler->filter('default|entry batch|status') as $entry) {
-//                        if ('Success' != $entry->getAttribute('reason')) {
-//                            throw new UserException("Update failed: " . $entry->getAttribute('reason'));
-//                        }
-//                    }
+                    // check status
+                    foreach ($resBodies as $res) {
+                        if ($res['reason'] != 'Success') {
+                            $this->logger->warn("Warning: " . $res['reason']);
+                        }
+                    }
 
                 } catch (RequestException $e) {
                     throw new UserException("Update failed: " . $e->getMessage(), $e, [
@@ -90,5 +96,20 @@ class SheetProcessor extends CommonProcessor
         }
 
         return $file;
+    }
+
+    protected function parseXmlResponse($xmlFeed)
+    {
+        $response = [];
+        $crawler = new Crawler($xmlFeed);
+
+        /** @var \DOMElement $entry */
+        foreach ($crawler->filter('default|entry batch|status') as $entry) {
+            $response[] = [
+                'reason' => $entry->getAttribute('reason')
+            ];
+        }
+
+        return $response;
     }
 }
