@@ -70,13 +70,14 @@ class SheetProcessor extends CommonProcessor
 
                     $this->logger->debug("Worksheet cells updated", [
                         'file' => $file->toArray(),
-                        'responses' => $resBodies
                     ]);
 
                     // check status
                     foreach ($resBodies as $res) {
-                        if ($res['reason'] != 'Success') {
-                            $this->logger->warn("Warning: " . $res['reason']);
+                        if (!isset($res['reason']) || $res['reason'] != 'Success') {
+                            $this->logger->warn("Warning: some cells might not me imported properly", [
+                                'response' => $res
+                            ]);
                         }
                     }
 
