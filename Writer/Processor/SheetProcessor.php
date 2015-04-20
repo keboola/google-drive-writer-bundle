@@ -65,7 +65,7 @@ class SheetProcessor extends CommonProcessor
                     $resBodies = [];
                     foreach ($responses as $res) {
                         /** @var Response  $res */
-                        $resBodies[] = $this->parseXmlResponse($res->getBody()->getContents());
+                        $resBodies += $this->parseXmlResponse($res->getBody()->getContents());
                     }
 
                     $this->logger->debug("Worksheet cells updated", [
@@ -75,7 +75,7 @@ class SheetProcessor extends CommonProcessor
                     // check status
                     foreach ($resBodies as $res) {
                         if (!isset($res['reason']) || $res['reason'] != 'Success') {
-                            $this->logger->warn("Warning: some cells might not me imported properly", [
+                            $this->logger->warn("Warning: Some cells might not be imported properly", [
                                 'response' => $res
                             ]);
                         }
