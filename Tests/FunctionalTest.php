@@ -13,9 +13,9 @@ use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
 use Keboola\StorageApi\Client;
 use Symfony\Component\HttpFoundation\Response;
-use Syrup\ComponentBundle\Encryption\Encryptor;
+use Keboola\Syrup\Encryption\Encryptor;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
-use Syrup\ComponentBundle\Test\AbstractFunctionalTest;
+use Keboola\Syrup\Test\AbstractFunctionalTest;
 
 class FunctionalTest extends AbstractFunctionalTest
 {

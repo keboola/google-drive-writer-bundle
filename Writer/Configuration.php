@@ -10,8 +10,6 @@ namespace Keboola\Google\DriveWriterBundle\Writer;
 
 use Keboola\Encryption\EncryptorInterface;
 use Keboola\Google\DriveWriterBundle\Entity\AccountFactory;
-use Keboola\Google\DriveWriterBundle\Entity\File;
-use Keboola\Google\DriveWriterBundle\Entity\Sheet;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Exception\ConfigurationException;
 use Keboola\StorageApi\Client as StorageApi;

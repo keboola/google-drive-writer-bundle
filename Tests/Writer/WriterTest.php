@@ -8,7 +8,7 @@ namespace Keboola\Google\DriveWriterBundle\Tests\Writer;
 
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
 use Keboola\Google\DriveWriterBundle\Writer\WriterFactory;
-use Syrup\ComponentBundle\Test\WebTestCase;
+use Keboola\Syrup\Test\WebTestCase;
 
 class WriterTest extends WebTestCase
 {

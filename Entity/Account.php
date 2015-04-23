@@ -8,7 +8,6 @@
 
 namespace Keboola\Google\DriveWriterBundle\Entity;
 
-use Keboola\Google\DriveWriterBundle\Exception\ConfigurationException;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
 use Keboola\StorageApi\Table;
 

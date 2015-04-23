@@ -8,14 +8,9 @@
 
 namespace Keboola\Google\DriveWriterBundle\Exception;
 
+use Keboola\Syrup\Exception\UserException;
 
-use Syrup\ComponentBundle\Exception\SyrupComponentException;
-
-class ParameterMissingException extends SyrupComponentException
+class ParameterMissingException extends UserException
 {
-	public function __construct($message)
-	{
-		parent::__construct(400, $message);
-	}
 
 }

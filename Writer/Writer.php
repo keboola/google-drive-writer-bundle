@@ -7,7 +7,6 @@
 
 namespace Keboola\Google\DriveWriterBundle\Writer;
 
-
 use GuzzleHttp\Exception\BadResponseException;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
@@ -16,8 +15,7 @@ use Keboola\Google\DriveWriterBundle\Writer\Processor\FileProcessor;
 use Keboola\Google\DriveWriterBundle\Writer\Processor\ProcessorInterface;
 use Keboola\Google\DriveWriterBundle\Writer\Processor\SheetProcessor;
 use Monolog\Logger;
-use Syrup\ComponentBundle\Exception\ApplicationException;
-use Syrup\ComponentBundle\Exception\UserException;
+use Keboola\Syrup\Exception\UserException;
 
 class Writer
 {

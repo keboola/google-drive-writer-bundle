@@ -7,8 +7,6 @@
 
 namespace Keboola\Google\DriveWriterBundle\Controller;
 
-
-use InvalidArgumentException;
 use Keboola\Encryption\EncryptorInterface;
 use Keboola\Google\DriveWriterBundle\Exception\ConfigurationException;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
@@ -20,11 +18,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBag;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Syrup\ComponentBundle\Controller\BaseController;
-use Syrup\ComponentBundle\Exception\SyrupComponentException;
-use Syrup\ComponentBundle\Exception\UserException;
+use Keboola\Syrup\Controller\BaseController;
+use Keboola\Syrup\Exception\SyrupComponentException;
+use Keboola\Syrup\Exception\UserException;
 
 class OauthController extends BaseController
 {
@@ -80,6 +77,7 @@ class OauthController extends BaseController
 		$token = $session->get('token');
 		$accountId = $session->get('account');
 		$referrer = $session->get('referrer');
+        $external = $session->get('external');
 
 		if ($token == null) {
 			throw new UserException("Your session expired, please try again");
@@ -129,6 +127,12 @@ class OauthController extends BaseController
 			$this->container->get('session')->clear();
 
 			if ($referrer) {
+
+                if ($external) {
+                    $referrer .= '?access-token=' . $account->getAttribute('accessToken')
+                        . '&refresh-token=' . $account->getAttribute('refreshToken');
+                }
+
 				return new RedirectResponse($referrer);
 			} else {
 				return new JsonResponse(array('status' => 'ok'));
@@ -162,6 +166,7 @@ class OauthController extends BaseController
 			$session->set('token', $client->getTokenString());
 			$session->set('account', $request->request->get('account'));
 			$session->set('referrer', $request->request->get('referrer'));
+            $session->set('external', $request->request->get('external'));
 
 			return new RedirectResponse($url);
 		} catch (\Exception $e) {

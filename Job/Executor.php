@@ -7,16 +7,15 @@
 
 namespace Keboola\Google\DriveWriterBundle\Job;
 
-
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
 use Keboola\Google\DriveWriterBundle\Writer\WriterFactory;
 use Keboola\Temp\Temp;
 use Monolog\Logger;
-use Syrup\ComponentBundle\Exception\UserException;
-use Syrup\ComponentBundle\Job\Executor as BaseExecutor;
-use Syrup\ComponentBundle\Job\Metadata\Job;
+use Keboola\Syrup\Exception\UserException;
+use Keboola\Syrup\Job\Executor as BaseExecutor;
+use Keboola\Syrup\Job\Metadata\Job;
 
 class Executor extends BaseExecutor
 {
@@ -43,10 +42,12 @@ class Executor extends BaseExecutor
 	public function execute(Job $job)
 	{
 		$this->configuration->setStorageApi($this->storageApi);
-
 		$accounts = $this->configuration->getAccounts();
-
 		$options = $job->getParams();
+
+        if (isset($options['external'])) {
+            // load files by tag from SAPI
+        }
 
         $fileFilter = null;
 		if (isset($options['config'])) {

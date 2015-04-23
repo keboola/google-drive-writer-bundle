@@ -7,7 +7,6 @@
 
 namespace Keboola\Google\DriveWriterBundle\Writer;
 
-
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
 use Monolog\Logger;

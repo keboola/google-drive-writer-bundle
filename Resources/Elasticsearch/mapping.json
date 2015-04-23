@@ -1,0 +1,16 @@
+{
+  "params": {
+    "dynamic": "strict",
+    "properties": {
+      "config": {
+        "type": "string"
+      },
+      "account": {
+        "type": "string"
+      },
+      "file": {
+        "type": "string"
+      }
+    }
+  }
+}

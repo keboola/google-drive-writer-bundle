@@ -12,8 +12,8 @@ use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
 use Symfony\Component\CssSelector\CssSelector;
 use Symfony\Component\DomCrawler\Crawler;
-use Syrup\ComponentBundle\Encryption\Encryptor;
-use Syrup\ComponentBundle\Test\WebTestCase;
+use Keboola\Syrup\Encryption\Encryptor;
+use Keboola\Syrup\Test\WebTestCase;
 
 class RestApiTest extends WebTestCase
 {

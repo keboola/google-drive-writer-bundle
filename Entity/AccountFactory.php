@@ -8,9 +8,6 @@
 
 namespace Keboola\Google\DriveWriterBundle\Entity;
 
-
-use Keboola\Encryption\EncryptorInterface;
-use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
 
 class AccountFactory

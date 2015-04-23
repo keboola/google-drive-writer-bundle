@@ -7,7 +7,6 @@
 
 namespace Keboola\Google\DriveWriterBundle\Entity;
 
-
 class File
 {
 	const TYPE_FILE = 'file';

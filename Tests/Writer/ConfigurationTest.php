@@ -7,7 +7,6 @@
 
 namespace Keboola\Google\DriveWriterBundle\Tests\Writer;
 
-
 class ConfigurationTest
 {
 

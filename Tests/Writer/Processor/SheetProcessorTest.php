@@ -7,9 +7,7 @@
 
 namespace Keboola\Google\DriveWriterBundle\Tests\Writer\Processor;
 
-use Keboola\Google\DriveWriterBundle\Writer\Configuration;
-use Keboola\Google\DriveWriterBundle\Writer\WriterFactory;
-use Syrup\ComponentBundle\Test\WebTestCase;
+use Keboola\Syrup\Test\WebTestCase;
 
 class SheetProcessorTest extends WebTestCase
 {
