@@ -15,6 +15,10 @@ class Account extends Table
 {
 	protected $header = array('id', 'title', 'googleId', 'type', 'sheetId', 'tableId', 'operation', 'targetFolder');
 
+    public static $allowedAttributes = [
+        'id', 'accountId', 'googleId', 'email', 'name', 'googleName', 'description', 'accessToken', 'refreshToken'
+    ];
+
 	protected $accountId;
 
 	/** @var Configuration */
@@ -173,7 +177,9 @@ class Account extends Table
 		}
 		unset($array['items']);
 
-		foreach($array as $k => $v) {
+        $attrs = array_intersect_key($array, array_flip(self::$allowedAttributes));
+
+		foreach($attrs as $k => $v) {
 			$this->setAttribute($k, $v);
 		}
 	}

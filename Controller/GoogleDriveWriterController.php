@@ -7,7 +7,6 @@
 
 namespace Keboola\Google\DriveWriterBundle\Controller;
 
-
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\Exception\ConfigurationException;
@@ -16,8 +15,8 @@ use Keboola\Google\DriveWriterBundle\Writer\Configuration;
 use Keboola\Google\DriveWriterBundle\Writer\Writer;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Syrup\ComponentBundle\Controller\ApiController;
-use Syrup\ComponentBundle\Exception\UserException;
+use Keboola\Syrup\Controller\ApiController;
+use Keboola\Syrup\Exception\UserException;
 
 class GoogleDriveWriterController extends ApiController
 {

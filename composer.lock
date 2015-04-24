@@ -1368,16 +1368,16 @@
         },
         {
             "name": "keboola/php-temp",
-            "version": "0.1.1",
+            "version": "0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/keboola/php-temp.git",
-                "reference": "994be24660f4dae03b0bf373aeb774cd3f369ac4"
+                "reference": "5549b524b3b4da27c8c26cfc06ab14d31bc547af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keboola/php-temp/zipball/994be24660f4dae03b0bf373aeb774cd3f369ac4",
-                "reference": "994be24660f4dae03b0bf373aeb774cd3f369ac4",
+                "url": "https://api.github.com/repos/keboola/php-temp/zipball/5549b524b3b4da27c8c26cfc06ab14d31bc547af",
+                "reference": "5549b524b3b4da27c8c26cfc06ab14d31bc547af",
                 "shasum": ""
             },
             "require": {
@@ -1412,7 +1412,7 @@
                 "filesystem",
                 "temp"
             ],
-            "time": "2015-04-23 05:39:27"
+            "time": "2015-04-24 12:20:55"
         },
         {
             "name": "keboola/storage-api-client",

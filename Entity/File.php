@@ -25,17 +25,19 @@ class File
 	protected $operation;
 	protected $targetFolder;
 	protected $pathname;
+    protected $size;
 
 	public function __construct(array $data)
 	{
 		$this->id = $data['id'];
 		$this->title = $data['title'];
-		$this->tableId = $data['tableId'];
+		$this->tableId = isset($data['tableId'])?$data['tableId']:null;
 		$this->googleId = isset($data['googleId'])?$data['googleId']:null;
 		$this->type = isset($data['type'])?$data['type']:static::TYPE_FILE;
 		$this->sheetId = isset($data['sheetId'])?$data['sheetId']:null;
 		$this->operation = isset($data['operation'])?$data['operation']:static::OPERATION_UPDATE;
 		$this->targetFolder = isset($data['targetFolder'])?$data['targetFolder']:null;
+        $this->size = isset($data['size'])?$data['size']:null;
 
 		$this->pathname = isset($data['pathname'])?$data['pathname']:null;
 	}
@@ -168,5 +170,15 @@ class File
     public function getTargetFolder()
     {
         return $this->targetFolder;
+    }
+
+    public function getSize()
+    {
+        if ($this->size != null) {
+            return $this->size;
+        } else if ($this->pathname != null) {
+            return filesize($this->pathname);
+        }
+        return null;
     }
 }

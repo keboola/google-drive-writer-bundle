@@ -68,7 +68,7 @@ class RestApi
 			[
 				'Content-Type' => 'application/json; charset=UTF-8',
 				'X-Upload-Content-Type' => 'text/csv',
-				'X-Upload-Content-Length' => filesize($file->getPathname())
+				'X-Upload-Content-Length' => $file->getSize()
 			],
 			json_encode($body)
 		);
@@ -86,7 +86,7 @@ class RestApi
 			[
 				'Content-Type' => 'application/json; charset=UTF-8',
 				'X-Upload-Content-Type' => 'text/csv',
-				'X-Upload-Content-Length' => filesize($file->getPathname())
+				'X-Upload-Content-Length' => $file->getSize()
 			],
 			json_encode([
 				'title' => $file->getTitle()
@@ -102,7 +102,7 @@ class RestApi
 	{
 		return $this->api->call($locationUri . '&convert=' . $convert, 'PUT', [
 			'Content-Type' => 'text/csv',
-			'Content-Length' => filesize($file->getPathname())
+			'Content-Length' => $file->getSize()
 		], fopen($file->getPathname(), 'r'))->json();
 	}
 

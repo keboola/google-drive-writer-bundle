@@ -10,6 +10,10 @@
       },
       "file": {
         "type": "string"
+      },
+      "external": {
+        "type": "object",
+        "enabled": false
       }
     }
   }

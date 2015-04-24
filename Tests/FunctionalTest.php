@@ -473,4 +473,20 @@ class FunctionalTest extends AbstractFunctionalTest
         $this->assertEquals('success', $job->getStatus());
     }
 
+    public function testRunExternal()
+    {
+        $job = $this->processJob($this->componentName . '/run', [
+            'external' => [
+                'account' => [
+                    'email' => $this->email,
+                    'accessToken' => $this->encryptor->encrypt($this->accessToken),
+                    'refreshToken' => $this->encryptor->encrypt($this->refreshToken)
+                ],
+                'tags' => ['tde']
+            ]
+        ]);
+
+        $this->assertEquals('success', $job->getStatus());
+    }
+
 }
