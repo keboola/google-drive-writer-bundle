@@ -60,20 +60,18 @@ class Executor extends BaseExecutor
 
             $writer = $this->writerFactory->create($account);
 
-            if (!isset($options['external']['tags'])) {
-                throw new UserException("Missing field 'tags'");
-            }
-            if (empty($options['external']['tags'])) {
-                throw new UserException("No tag specified");
+            if (!isset($options['external']['query'])) {
+                throw new UserException("Missing field 'query'");
             }
 
-            $tagsQueryString = '';
-            foreach ($options['external']['tags'] as $tag) {
-                $tagsQueryString .= '+tags:' . $tag .' ';
-            }
-            $tagsQueryString .= '-tags:wr-google-drive-processed';
+            $queryString = $options['external']['query'];
+            $queryString .= ' -tags:wr-google-drive-processed';
 
-            $uploadedFiles = $this->storageApi->listFiles((new ListFilesOptions())->setQuery($tagsQueryString));
+            $uploadedFiles = $this->storageApi->listFiles((new ListFilesOptions())->setQuery($queryString));
+
+            if (empty($uploadedFiles)) {
+                throw new UserException("No file matches your query '" . $queryString . "'");
+            }
 
             foreach ($uploadedFiles as $uploadedFile) {
 

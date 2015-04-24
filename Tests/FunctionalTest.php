@@ -12,6 +12,7 @@ use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
 use Keboola\StorageApi\Client;
+use Keboola\StorageApi\Options\ListFilesOptions;
 use Symfony\Component\HttpFoundation\Response;
 use Keboola\Syrup\Encryption\Encryptor;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
@@ -98,7 +99,7 @@ class FunctionalTest extends AbstractFunctionalTest
 	protected function initApi($accessToken, $refreshToken)
 	{
 		$this->restApi->getApi()->setCredentials($accessToken, $refreshToken);
-		$this->restApi->getApi()->setRefreshTokenCallback(array($this, 'refreshTokenCallback'));
+		$this->restApi->getApi()->setRefreshTokenCallback([$this, 'refreshTokenCallback']);
 	}
 
 	public function refreshTokenCallback($accessToken, $refreshToken)
@@ -111,12 +112,12 @@ class FunctionalTest extends AbstractFunctionalTest
 
 	protected function createConfig()
 	{
-		$this->configuration->addAccount(array(
+		$this->configuration->addAccount([
 			'id'            => $this->accountId,
 			'name'          => $this->accountName,
 			'accountName'   => $this->accountName,
 			'description'   => 'Test Account created by PhpUnit test suite'
-		));
+		]);
 	}
 
 	protected function createAccount()
@@ -475,6 +476,14 @@ class FunctionalTest extends AbstractFunctionalTest
 
     public function testRunExternal()
     {
+        $processedFiles = $this->storageApiClient->listFiles(
+            (new ListFilesOptions())->setTags(['wr-google-drive-processed'])
+        );
+
+        foreach ($processedFiles as $f) {
+            $this->storageApiClient->deleteFileTag($f['id'], 'wr-google-drive-processed');
+        }
+
         $job = $this->processJob($this->componentName . '/run', [
             'external' => [
                 'account' => [
@@ -482,7 +491,7 @@ class FunctionalTest extends AbstractFunctionalTest
                     'accessToken' => $this->encryptor->encrypt($this->accessToken),
                     'refreshToken' => $this->encryptor->encrypt($this->refreshToken)
                 ],
-                'tags' => ['tde']
+                'query' => '+tags:tde'
             ]
         ]);
 
