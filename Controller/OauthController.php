@@ -145,7 +145,7 @@ class OauthController extends BaseController
 	public function oauthAction(Request $request)
 	{
 		if (!$request->request->get('account')) {
-			throw new ParameterMissingException("Parameter 'account' is missing");
+			throw new ParameterMissingException("Parameter 'account' is required");
 		}
 
 		$session = $this->get('session');
@@ -173,5 +173,4 @@ class OauthController extends BaseController
 			throw new SyrupComponentException(500, 'OAuth UI request error', $e);
 		}
 	}
-
 }

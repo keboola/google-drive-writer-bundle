@@ -8,6 +8,11 @@ keboola_google_drive_writer_oauth_callback:
     path: /oauth-callback
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:Oauth:oauthCallback }
 
+keboola_google_drive_writer_oauth:
+    path: /oauth/token-decrypt
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:Oauth:tokenDecrypt }
+    methods:  [POST]
+
 # External Auth
 keboola_google_drive_writer_post_external_auth_link:
     path: /external-link
@@ -51,6 +56,11 @@ keboola_google_drive_writer_get_access_token:
     path: /access-token/{accountId}
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getAccessToken }
     methods:  [GET]
+
+keboola_google_drive_writer_post_access_token_decrypt:
+    path: /access-token/decrypt
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:postAccessTokenDecrypt }
+    methods:  [POST]
 
 # Files
 keboola_google_drive_writer_get_files:

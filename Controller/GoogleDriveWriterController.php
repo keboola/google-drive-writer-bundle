@@ -93,6 +93,20 @@ class GoogleDriveWriterController extends ApiController
 		]);
 	}
 
+    public function postAccessTokenDecryptAction(Request $request)
+    {
+        $params = $this->getPostJson($request);
+
+        if (!isset($params['token'])) {
+            throw new ParameterMissingException("Parameter 'token' is required");
+        }
+
+        return $this->createJsonResponse([
+            'token' => $this->container->get('syrup.encryptor')->decrypt($params['token']),
+            'apiKey' => $this->container->getParameter('google.browser-key')
+        ]);
+    }
+
 	/** Configs */
 
 	/**
