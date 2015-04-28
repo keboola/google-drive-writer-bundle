@@ -86,7 +86,7 @@ class OauthController extends BaseController
 		$code = $this->get('request')->query->get('code');
 
 		if (empty($code)) {
-			throw new SyrupComponentException(400, 'Could not read from Google API');
+			throw new UserException('Could not read from Google API, please try again');
 		}
 
 		$googleApi = $this->getGoogleApi();
@@ -108,31 +108,35 @@ class OauthController extends BaseController
 			);
 
 			$googleApi->setCredentials($tokens['access_token'], $tokens['refresh_token']);
-			$userData = $googleApi->call(RestApi::USER_INFO_URL)->json();
 
-			$account = $configuration->getAccountBy('accountId', $accountId);
+            if ($external) {
+                $this->container->get('session')->clear();
+                $referrer .= '?access-token='
+                    . $this->container->get('syrup.encryptor')->encrypt($tokens['access_token'])
+                    . '&refresh-token='
+                    . $this->container->get('syrup.encryptor')->encrypt($tokens['refresh_token']);
 
-			if (null == $account) {
-				throw new ConfigurationException("Account doesn't exist");
-			}
+                return new RedirectResponse($referrer);
+            } else {
+                $userData = $googleApi->call(RestApi::USER_INFO_URL)->json();
+                $account = $configuration->getAccountBy('accountId', $accountId);
 
-			$account
-				->setGoogleId($userData['id'])
-				->setGoogleName($userData['name'])
-				->setEmail($userData['email'])
-				->setAccessToken($tokens['access_token'])
-				->setRefreshToken($tokens['refresh_token']);
-			$account->save();
+                if (null == $account) {
+                    throw new ConfigurationException("Account doesn't exist");
+                }
+
+                $account
+                    ->setGoogleId($userData['id'])
+                    ->setGoogleName($userData['name'])
+                    ->setEmail($userData['email'])
+                    ->setAccessToken($tokens['access_token'])
+                    ->setRefreshToken($tokens['refresh_token'])
+                    ->save();
+            }
 
 			$this->container->get('session')->clear();
 
 			if ($referrer) {
-
-                if ($external) {
-                    $referrer .= '?access-token=' . $account->getAttribute('accessToken')
-                        . '&refresh-token=' . $account->getAttribute('refreshToken');
-                }
-
 				return new RedirectResponse($referrer);
 			} else {
 				return new JsonResponse(array('status' => 'ok'));
@@ -144,8 +148,8 @@ class OauthController extends BaseController
 
 	public function oauthAction(Request $request)
 	{
-		if (!$request->request->get('account')) {
-			throw new ParameterMissingException("Parameter 'account' is required");
+		if (!$request->request->get('account') && !$request->request->get('external')) {
+			throw new ParameterMissingException("Parameter 'account' or 'external' is required");
 		}
 
 		$session = $this->get('session');

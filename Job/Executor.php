@@ -78,7 +78,7 @@ class Executor extends BaseExecutor
                 $file = new File([
                     'id' => $uploadedFile['id'],
                     'title' => $uploadedFile['name'],
-                    'targetFolder' => isset($options['targetFolder'])?$options['targetFolder']:null,
+                    'targetFolder' => isset($options['external']['targetFolder'])?$options['external']['targetFolder']:null,
                     'type' => File::TYPE_FILE,
                     'pathname' => $uploadedFile['url'],
                     'size' => $uploadedFile['sizeBytes']
