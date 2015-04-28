@@ -111,7 +111,8 @@ class OauthController extends BaseController
 
             if ($external) {
                 $this->container->get('session')->clear();
-                $referrer .= '?access-token='
+                $referrer .= strstr($referrer, '?')?'&':'?';
+                $referrer .= 'access-token='
                     . $this->container->get('syrup.encryptor')->encrypt($tokens['access_token'])
                     . '&refresh-token='
                     . $this->container->get('syrup.encryptor')->encrypt($tokens['refresh_token']);
