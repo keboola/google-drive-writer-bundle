@@ -108,6 +108,7 @@ class OauthController extends BaseController
 			);
 
 			$googleApi->setCredentials($tokens['access_token'], $tokens['refresh_token']);
+            $userData = $googleApi->call(RestApi::USER_INFO_URL)->json();
 
             if ($external) {
                 $this->container->get('session')->clear();
@@ -115,11 +116,11 @@ class OauthController extends BaseController
                 $referrer .= 'access-token='
                     . $this->container->get('syrup.encryptor')->encrypt($tokens['access_token'])
                     . '&refresh-token='
-                    . $this->container->get('syrup.encryptor')->encrypt($tokens['refresh_token']);
+                    . $this->container->get('syrup.encryptor')->encrypt($tokens['refresh_token'])
+                    . '&email=' . $userData['email'];
 
                 return new RedirectResponse($referrer);
             } else {
-                $userData = $googleApi->call(RestApi::USER_INFO_URL)->json();
                 $account = $configuration->getAccountBy('accountId', $accountId);
 
                 if (null == $account) {
