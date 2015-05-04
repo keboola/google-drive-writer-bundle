@@ -55,6 +55,12 @@ class Executor extends BaseExecutor
                 throw new UserException("Missing field 'account'");
             }
 
+            try {
+                $this->configuration->create();
+            } catch (\Exception $e) {
+                // create configuration if not exists
+            }
+
             $account = new Account($this->configuration, uniqid('external'));
             $account->fromArray($options['external']['account']);
 
@@ -66,6 +72,13 @@ class Executor extends BaseExecutor
 
             $queryString = $options['external']['query'];
             $queryString .= ' -tags:wr-google-drive-processed';
+
+            if (isset($options['external']['filterByRunId']) && $options['external']['filterByRunId']) {
+                $parentRunId = $this->getParentRunId($job->getRunId());
+                if ($parentRunId) {
+                    $queryString .= ' +tags:runId-' . $parentRunId;
+                }
+            }
 
             $uploadedFiles = $this->storageApi->listFiles((new ListFilesOptions())->setQuery($queryString));
 
@@ -147,5 +160,15 @@ class Executor extends BaseExecutor
 
 		return $status;
 	}
+
+    protected function getParentRunId($runId)
+    {
+        $runIdArr = explode('.', $runId);
+
+        if (count($runIdArr) > 1) {
+            return $runIdArr[0];
+        }
+        return null;
+    }
 
 }

@@ -26,12 +26,12 @@ class Account extends Table
 
 	protected $files = array();
 
-	public function __construct(Configuration $configuration, $accountId)
+	public function __construct(Configuration $configuration, $accountId, $sapi = true)
 	{
 		$this->configuration = $configuration;
-		$storageApi = $this->configuration->getStorageApi();
-		$sysBucket = $this->configuration->getSysBucketId();
 		$this->accountId = $accountId;
+        $storageApi = $this->configuration->getStorageApi();
+        $sysBucket = $this->configuration->getSysBucketId();
 
 		parent::__construct($storageApi, $sysBucket . '.' . $accountId, "");
 	}
