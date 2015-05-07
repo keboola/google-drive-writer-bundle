@@ -7,6 +7,7 @@
 
 namespace Keboola\Google\DriveWriterBundle\Controller;
 
+use GuzzleHttp\Exception\ClientException;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\Exception\ConfigurationException;
@@ -62,15 +63,15 @@ class GoogleDriveWriterController extends ApiController
 
 		$referrer = $post['referrer'] . '?token=' . $token['token'] .'&account=' . $post['account'];
 
-		$url = $this->generateUrl('keboola_google_drive_writer_external_auth', array(
+		$url = $this->generateUrl('keboola_google_drive_writer_external_auth', [
 			'token'     => $token['token'],
 			'account'   => $post['account'],
 			'referrer'  => $referrer
-		), true);
+		], true);
 
-		return $this->createJsonResponse(array(
+		return $this->createJsonResponse([
 			'link'  => $url
-		));
+		]);
 	}
 
 	/**
@@ -87,10 +88,14 @@ class GoogleDriveWriterController extends ApiController
 			throw new UserException("Account not authorized yet");
 		}
 
-		return $this->createJsonResponse([
-			'token' => $this->getWriter($account)->refreshToken($account),
-			'apiKey' => $this->container->getParameter('google.browser-key')
-		]);
+        try {
+            return $this->createJsonResponse([
+                'token' => $this->getWriter($account)->refreshToken($account),
+                'apiKey' => $this->container->getParameter('google.browser-key')
+            ]);
+        } catch (ClientException $e) {
+            throw new UserException("Can't refresh token, it's probably expired.");
+        }
 	}
 
     public function postAccessTokenDecryptAction(Request $request)
@@ -118,7 +123,7 @@ class GoogleDriveWriterController extends ApiController
 
 		$res = [];
 		foreach ($accounts as $account) {
-			$res[] = array_intersect_key($account, array_fill_keys(array('id', 'name', 'description'), 0));
+			$res[] = array_intersect_key($account, array_fill_keys(['id', 'name', 'description'], 0));
 		}
 
 		return $this->createJsonResponse($res);
