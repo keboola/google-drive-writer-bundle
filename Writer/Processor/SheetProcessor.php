@@ -10,8 +10,8 @@ namespace Keboola\Google\DriveWriterBundle\Writer\Processor;
 use GuzzleHttp\Message\Response;
 use GuzzleHttp\Exception\RequestException;
 use Keboola\Google\DriveWriterBundle\Entity\File;
+use Keboola\Syrup\Exception\UserException;
 use Symfony\Component\DomCrawler\Crawler;
-use Syrup\ComponentBundle\Exception\UserException;
 
 class SheetProcessor extends CommonProcessor
 {
@@ -59,27 +59,39 @@ class SheetProcessor extends CommonProcessor
                     ]);
 
                     // update cells content
+                    $timestart = microtime(true);
                     $responses = $this->googleDriveApi->updateCells($file);
+                    $timeend = microtime(true);
+                    $apiCallDuration = $timeend - $timestart;
 
                     // log responses for debug
-                    $resBodies = [];
+                    $timestart = microtime(true);
                     foreach ($responses as $res) {
+
                         /** @var Response  $res */
-                        $resBodies += $this->parseXmlResponse($res->getBody()->getContents());
-                    }
+                        $batchStatuses = $this->parseXmlResponse($res->getBody()->getContents());
 
-                    $this->logger->debug("Worksheet cells updated", [
-                        'file' => $file->toArray(),
-                    ]);
+                        $isWarning = false;
+                        foreach ($batchStatuses as $bs) {
+                            if (!isset($resBody['reason']) || $resBody['reason'] != 'Success') {
+                                $isWarning = true;
+                            }
+                        }
 
-                    // check status
-                    foreach ($resBodies as $res) {
-                        if (!isset($res['reason']) || $res['reason'] != 'Success') {
-                            $this->logger->warn("Warning: Some cells might not be imported properly", [
-                                'response' => $res
+                        if ($isWarning) {
+                            $this->logger->warning("Warning: Some cells might not be imported properly", [
+                                'response' => $batchStatuses
                             ]);
                         }
                     }
+                    $timeend = microtime(true);
+                    $responseParsingDuration = $timeend - $timestart;
+
+                    $this->logger->debug("Worksheet cells updated", [
+                        'file' => $file->toArray(),
+                        'apiCallDuration' => $apiCallDuration,
+                        'responseParsingDuration' => $responseParsingDuration
+                    ]);
 
                 } catch (RequestException $e) {
                     throw new UserException("Update failed: " . $e->getMessage(), $e, [
@@ -102,12 +114,11 @@ class SheetProcessor extends CommonProcessor
     protected function parseXmlResponse($xmlFeed)
     {
         $response = [];
-        $crawler = new Crawler($xmlFeed);
 
-        /** @var \DOMElement $entry */
-        foreach ($crawler->filter('default|entry batch|status') as $entry) {
+        $xml = new \SimpleXMLElement($xmlFeed);
+        foreach($xml->xpath('//batch:status') as $batchStatus) {
             $response[] = [
-                'reason' => $entry->getAttribute('reason')
+                'reason' => (string) $batchStatus['reason']
             ];
         }
 

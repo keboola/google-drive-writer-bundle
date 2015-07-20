@@ -134,13 +134,17 @@ class RestApi
         $limit = 500;
         $offset = 0;
         $rowCnt = $this->countLines($csvFile);
+        $colCnt = $csvFile->getColumnsCount();
+
+        // decrease the limit according to $colCnt
+        $limit = intval($limit / ($colCnt / 20));
+
         $responses = [];
 
         if ($rowCnt > $limit) {
 
             // request is decomposed to several smaller requests, response is thrown away
-            for ($i=0;$i<=intval($rowCnt/$limit);$i++) {
-
+            for ($i=0; $i <= intval($rowCnt/$limit); $i++) {
                 $responses[] = $this->api->call(
                     sprintf(self::SPREADSHEET_CELL_BATCH, $file->getGoogleId(), $file->getSheetId()),
                     'POST',
