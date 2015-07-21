@@ -137,7 +137,9 @@ class RestApi
         $colCnt = $csvFile->getColumnsCount();
 
         // decrease the limit according to $colCnt
-        $limit = intval($limit / ($colCnt / 20));
+        if ($colCnt > 20) {
+            $limit = intval($limit / intval($colCnt / 20));
+        }
 
         $responses = [];
 
