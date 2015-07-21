@@ -72,15 +72,17 @@ class SheetProcessor extends CommonProcessor
                         $batchStatuses = $this->parseXmlResponse($res->getBody()->getContents());
 
                         $isWarning = false;
+                        $errors = [];
                         foreach ($batchStatuses as $bs) {
-                            if (!isset($resBody['reason']) || $resBody['reason'] != 'Success') {
+                            if (!isset($bs['reason']) || $bs['reason'] != 'Success') {
                                 $isWarning = true;
+                                $errors[] = $bs;
                             }
                         }
 
                         if ($isWarning) {
                             $this->logger->warning("Warning: Some cells might not be imported properly", [
-                                'response' => $batchStatuses
+                                'errors' => $errors
                             ]);
                         }
                     }
