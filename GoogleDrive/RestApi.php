@@ -8,6 +8,7 @@
 
 namespace Keboola\Google\DriveWriterBundle\GoogleDrive;
 
+use GuzzleHttp\Message\Response;
 use Keboola\Csv\CsvFile;
 use Keboola\Google\ClientBundle\Google\RestApi as GoogleApi;
 use Keboola\Google\DriveWriterBundle\Entity\File;
@@ -131,7 +132,7 @@ class RestApi
 	{
         $csvFile = new CsvFile($file->getPathname());
 
-        $limit = 500;
+        $limit = 5000;
         $offset = 0;
         $rowCnt = $this->countLines($csvFile);
         $colCnt = $csvFile->getColumnsCount();
@@ -141,13 +142,13 @@ class RestApi
             $limit = intval($limit / intval($colCnt / 20));
         }
 
-        $responses = [];
+        $errors = [];
 
         if ($rowCnt > $limit) {
 
             // request is decomposed to several smaller requests, response is thrown away
             for ($i=0; $i <= intval($rowCnt/$limit); $i++) {
-                $responses[] = $this->api->call(
+                $response = $this->api->call(
                     sprintf(self::SPREADSHEET_CELL_BATCH, $file->getGoogleId(), $file->getSheetId()),
                     'POST',
                     [
@@ -168,12 +169,14 @@ class RestApi
                     )
                 );
 
+	            $errors = array_merge($errors, $this->validateResponse($response));
+
                 $offset += $limit;
             }
 
         } else {
 
-            $responses[] = $this->api->call(
+            $response = $this->api->call(
                 sprintf(self::SPREADSHEET_CELL_BATCH, $file->getGoogleId(), $file->getSheetId()),
                 'POST',
                 [
@@ -193,9 +196,13 @@ class RestApi
                     ]
                 )
             );
+
+	        $errors = $this->validateResponse($response);
         }
 
-        return $responses;
+        return [
+	        'errors' => $errors
+        ];
 	}
 
     public function createWorksheet(File $file)
@@ -360,5 +367,33 @@ class RestApi
 		return $cnt;
 	}
 
+	protected function validateResponse(Response $res)
+	{
+		/** @var Response $res */
+		$batchStatuses = $this->parseXmlResponse($res->getBody()->getContents());
+
+		$errors = [];
+		foreach ($batchStatuses as $bs) {
+			if (!isset($bs['reason']) || $bs['reason'] != 'Success') {
+				$errors[] = $bs;
+			}
+		}
+
+		return $errors;
+	}
+
+	protected function parseXmlResponse($xmlFeed)
+	{
+		$response = [];
+
+		$xml = new \SimpleXMLElement($xmlFeed);
+		foreach($xml->xpath('//batch:status') as $batchStatus) {
+			$response[] = [
+				'reason' => (string) $batchStatus['reason']
+			];
+		}
+
+		return $response;
+	}
 
 }

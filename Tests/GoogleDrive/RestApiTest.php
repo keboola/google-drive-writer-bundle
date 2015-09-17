@@ -222,23 +222,9 @@ class RestApiTest extends WebTestCase
 		$this->restApi->updateWorksheet($file);
 
         /** @var Response $res */
-        $responses = $this->restApi->updateCells($file);
-        $res = $responses[0];
+        $errors = $this->restApi->updateCells($file);
 
-        $this->assertEquals(200, $res->getStatusCode());
-
-        $xmlFeed = $res->getBody()->getContents();
-
-        $crawler = new Crawler($xmlFeed);
-
-        CssSelector::disableHtmlExtension();
-
-        $this->assertNotEmpty($crawler->filter('default|entry batch|status'));
-
-        /** @var \DOMElement $entry */
-        foreach ($crawler->filter('default|entry batch|status') as $entry) {
-            $this->assertEquals('Success', $entry->getAttribute('reason'));
-        }
+        $this->assertEmpty($errors['errors']);
 
 		// cleanup
 		$this->restApi->deleteFile($file);

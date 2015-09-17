@@ -60,37 +60,20 @@ class SheetProcessor extends CommonProcessor
 
                     // update cells content
                     $timestart = microtime(true);
-                    $responses = $this->googleDriveApi->updateCells($file);
+                    $status = $this->googleDriveApi->updateCells($file);
                     $timeend = microtime(true);
                     $apiCallDuration = $timeend - $timestart;
 
-                    // log responses for debug
-                    $timestart = microtime(true);
-                    foreach ($responses as $res) {
-
-                        /** @var Response  $res */
-                        $batchStatuses = $this->parseXmlResponse($res->getBody()->getContents());
-
-                        $errors = [];
-                        foreach ($batchStatuses as $bs) {
-                            if (!isset($bs['reason']) || $bs['reason'] != 'Success') {
-                                $errors[] = $bs;
-                            }
-                        }
-
-                        if (count($errors)) {
-                            $this->logger->warning("Some cells might not be imported properly", [
-                                'errors' => $errors
-                            ]);
-                        }
+                    if (count($status['errors'])) {
+                        $this->logger->warning("Some cells might not be imported properly", [
+                            'errors' => $status['errors']
+                        ]);
                     }
-                    $timeend = microtime(true);
-                    $responseParsingDuration = $timeend - $timestart;
 
-                    $this->logger->debug("Worksheet cells updated", [
+                    $this->logger->debug("Cells updated", [
                         'file' => $file->toArray(),
                         'apiCallDuration' => $apiCallDuration,
-                        'responseParsingDuration' => $responseParsingDuration
+                        'status' => $status
                     ]);
 
                 } catch (RequestException $e) {
@@ -109,19 +92,5 @@ class SheetProcessor extends CommonProcessor
         }
 
         return $file;
-    }
-
-    protected function parseXmlResponse($xmlFeed)
-    {
-        $response = [];
-
-        $xml = new \SimpleXMLElement($xmlFeed);
-        foreach($xml->xpath('//batch:status') as $batchStatus) {
-            $response[] = [
-                'reason' => (string) $batchStatus['reason']
-            ];
-        }
-
-        return $response;
     }
 }
