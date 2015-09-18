@@ -132,7 +132,7 @@ class RestApi
 	{
         $csvFile = new CsvFile($file->getPathname());
 
-        $limit = 5000;
+        $limit = 500;
         $offset = 0;
         $rowCnt = $this->countLines($csvFile);
         $colCnt = $csvFile->getColumnsCount();
