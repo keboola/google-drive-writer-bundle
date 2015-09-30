@@ -11,6 +11,7 @@ use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
 use Keboola\Google\DriveWriterBundle\Writer\WriterFactory;
+use Keboola\StorageApi\ClientException;
 use Keboola\StorageApi\Options\ListFilesOptions;
 use Keboola\Temp\Temp;
 use Monolog\Logger;
@@ -146,7 +147,14 @@ class Executor extends BaseExecutor
                     }
 
                     $file->setPathname($this->temp->createTmpFile()->getPathname());
-                    $this->storageApi->exportTable($file->getTableId(), $file->getPathname());
+
+                    try {
+                        $this->storageApi->exportTable($file->getTableId(), $file->getPathname());
+                    } catch (ClientException $e) {
+                        throw new UserException($e->getMessage(), $e, [
+                            'file' => $file->toArray()
+                        ]);
+                    }
 
                     $file = $writer->process($file);
 
