@@ -6,12 +6,12 @@ services:
 
     wr_google_drive.configuration:
         class: Keboola\Google\DriveWriterBundle\Writer\Configuration
-        arguments: [%app_name%, @syrup.encryptor]
+        arguments: [%app_name%, @syrup.object_encryptor]
 
     wr_google_drive.writer_factory:
         class: Keboola\Google\DriveWriterBundle\Writer\WriterFactory
         arguments: [@wr_google_drive.rest_api, @logger]
 
-    wr_google_drive.job_executor:
+    syrup.job_executor:
         class: Keboola\Google\DriveWriterBundle\Job\Executor
         arguments: [@wr_google_drive.writer_factory, @wr_google_drive.configuration, @syrup.temp, @logger]

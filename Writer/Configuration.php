@@ -8,13 +8,13 @@
 
 namespace Keboola\Google\DriveWriterBundle\Writer;
 
-use Keboola\Encryption\EncryptorInterface;
 use Keboola\Google\DriveWriterBundle\Entity\AccountFactory;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Exception\ConfigurationException;
 use Keboola\StorageApi\Client as StorageApi;
 use Keboola\StorageApi\Config\Reader;
 use Keboola\StorageApi\Table;
+use Keboola\Syrup\Service\ObjectEncryptor;
 
 class Configuration
 {
@@ -30,14 +30,15 @@ class Configuration
 	/** @var AccountFactory */
 	protected $accountFactory;
 
-	/** @var  EncryptorInterface */
+	/** @var ObjectEncryptor */
 	protected $encryptor;
 
 	protected $tokenExpiration = 172800;
 
-	public function __construct($componentName, EncryptorInterface $encryptor)
+	public function __construct($componentName, ObjectEncryptor $encryptor)
 	{
 		$this->componentName = $componentName;
+
 		$this->encryptor = $encryptor;
 
 		$this->accountFactory = new AccountFactory($this);

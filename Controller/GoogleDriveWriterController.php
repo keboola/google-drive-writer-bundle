@@ -90,7 +90,7 @@ class GoogleDriveWriterController extends ApiController
 
         try {
             return $this->createJsonResponse([
-                'token' => $this->getWriter($account)->refreshToken($account),
+                'token' => $this->getWriter($account)->refreshToken(),
                 'apiKey' => $this->container->getParameter('google.browser-key')
             ]);
         } catch (ClientException $e) {

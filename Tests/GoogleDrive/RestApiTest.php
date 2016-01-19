@@ -7,12 +7,9 @@
 
 namespace Keboola\Google\DriveWriterBundle\Tests\GoogleDrive;
 
-use GuzzleHttp\Message\Response;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
-use Symfony\Component\CssSelector\CssSelector;
-use Symfony\Component\DomCrawler\Crawler;
-use Keboola\Syrup\Encryption\Encryptor;
+use Keboola\Syrup\Service\ObjectEncryptor;
 use Keboola\Syrup\Test\WebTestCase;
 
 class RestApiTest extends WebTestCase
@@ -22,7 +19,7 @@ class RestApiTest extends WebTestCase
 	/** @var RestApi */
 	protected $restApi;
 
-	/** @var Encryptor */
+	/** @var ObjectEncryptor */
 	protected $encryptor;
 
 	protected $testCsvPath;
@@ -38,7 +35,7 @@ class RestApiTest extends WebTestCase
 		$container = $this->httpClient->getContainer();
 
 		$this->restApi = $container->get('wr_google_drive.rest_api');
-		$this->encryptor = $container->get('syrup.encryptor');
+		$this->encryptor = $container->get('syrup.object_encryptor');
 
 		$this->testCsvPath = realpath(__DIR__ . '/../data/test.csv');
 		$this->test2CsvPath = realpath(__DIR__ . '/../data/test2.csv');
@@ -221,7 +218,6 @@ class RestApiTest extends WebTestCase
 		// update sheet size
 		$this->restApi->updateWorksheet($file);
 
-        /** @var Response $res */
         $errors = $this->restApi->updateCells($file);
 
         $this->assertEmpty($errors['errors']);

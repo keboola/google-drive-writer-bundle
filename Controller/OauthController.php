@@ -108,7 +108,7 @@ class OauthController extends BaseController
 			);
 
 			$googleApi->setCredentials($tokens['access_token'], $tokens['refresh_token']);
-            $userData = $googleApi->call(RestApi::USER_INFO_URL)->json();
+            $userData = json_decode($googleApi->request('/oauth2/v2/userinfo'), true);
 
             if ($external) {
                 $this->container->get('session')->clear();

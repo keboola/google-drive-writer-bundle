@@ -8,7 +8,7 @@
 
 namespace Keboola\Google\DriveWriterBundle\GoogleDrive;
 
-use GuzzleHttp\Message\Response;
+use GuzzleHttp\Psr7\Response;
 use Keboola\Csv\CsvFile;
 use Keboola\Google\ClientBundle\Google\RestApi as GoogleApi;
 use Keboola\Google\DriveWriterBundle\Entity\File;
@@ -46,7 +46,8 @@ class RestApi
 
 	public function listFiles($params = [])
 	{
-		return $this->api->call(self::FILE_METADATA, 'GET', [], $params)->json();
+		$response = $this->api->request(self::FILE_METADATA, 'GET', [], ['query' => $params]);
+		return json_decode($response->getBody(), true);
 	}
 
 	public function insertFile(File $file)
@@ -71,10 +72,14 @@ class RestApi
 				'X-Upload-Content-Type' => 'text/csv',
 				'X-Upload-Content-Length' => $file->getSize()
 			],
-			json_encode($body)
+			[
+				'json' => [
+					'title' => $file->getTitle()
+				]
+			]
 		);
 
-		$locationUri = $response->getHeader('Location');
+		$locationUri = $response->getHeaderLine('Location');
 
 		return $this->putFile($file, $locationUri, $convert);
 	}
@@ -89,32 +94,44 @@ class RestApi
 				'X-Upload-Content-Type' => 'text/csv',
 				'X-Upload-Content-Length' => $file->getSize()
 			],
-			json_encode([
-				'title' => $file->getTitle()
-			])
+			[
+				'json' => [
+					'title' => $file->getTitle()
+				]
+			]
 		);
 
-		$locationUri = $response->getHeader('Location');
+		$locationUri = $response->getHeaderLine('Location');
 
 		return $this->putFile($file, $locationUri, false);
 	}
 
 	protected function putFile(File $file, $locationUri, $convert)
 	{
-		return $this->api->call($locationUri . '&convert=' . $convert, 'PUT', [
-			'Content-Type' => 'text/csv',
-			'Content-Length' => $file->getSize()
-		], fopen($file->getPathname(), 'r'))->json();
+		$response = $this->api->request(
+			$locationUri . '&convert=' . $convert,
+			'PUT',
+			[
+				'Content-Type' => 'application/json',
+				'Content-Length' => $file->getSize()
+			],
+			[
+				'body' => fopen($file->getPathname(), 'r')
+			]
+		);
+
+		return json_decode($response->getBody(), true);
 	}
 
     public function getFile($id)
     {
-        return $this->api->call(self::FILE_METADATA . '/' . $id, 'GET')->json();
+		$response = $this->api->request(self::FILE_METADATA . '/' . $id, 'GET');
+        return json_decode($response->getBody(), true);
     }
 
 	public function deleteFile(File $file)
 	{
-		return $this->api->call(self::FILE_METADATA . '/' . $file->getGoogleId(), 'DELETE');
+		return $this->api->request(self::FILE_METADATA . '/' . $file->getGoogleId(), 'DELETE');
 	}
 
 
@@ -148,7 +165,7 @@ class RestApi
 
             // request is decomposed to several smaller requests, response is thrown away
             for ($i=0; $i <= intval($rowCnt/$limit); $i++) {
-                $response = $this->api->call(
+                $response = $this->api->request(
                     sprintf(self::SPREADSHEET_CELL_BATCH, $file->getGoogleId(), $file->getSheetId()),
                     'POST',
                     [
@@ -176,7 +193,7 @@ class RestApi
 
         } else {
 
-            $response = $this->api->call(
+            $response = $this->api->request(
                 sprintf(self::SPREADSHEET_CELL_BATCH, $file->getGoogleId(), $file->getSheetId()),
                 'POST',
                 [
@@ -185,16 +202,18 @@ class RestApi
                     'GData-Version' => '3.0',
                     'If-Match' => '*'
                 ],
-                $this->templating->render(
-                    'KeboolaGoogleDriveWriterBundle:Feed:Cell/batch.xml.twig',
-                    [
-                        'csv' => $csvFile,
-                        'fileId' => $file->getGoogleId(),
-                        'worksheetId' => $file->getSheetId(),
-                        'limit' => $limit,
-                        'offset' => $offset
-                    ]
-                )
+                [
+					'body' => $this->templating->render(
+						'KeboolaGoogleDriveWriterBundle:Feed:Cell/batch.xml.twig',
+						[
+							'csv' => $csvFile,
+							'fileId' => $file->getGoogleId(),
+							'worksheetId' => $file->getSheetId(),
+							'limit' => $limit,
+							'offset' => $offset
+						]
+					)
+				]
             );
 
 	        $errors = $this->validateResponse($response);
@@ -220,7 +239,7 @@ class RestApi
             ]
         );
 
-        return $this->api->call(
+        return $this->api->request(
             sprintf(self::SPREADSHEET_WORKSHEETS . '/%s/private/full', $file->getGoogleId()),
             'POST',
             [
@@ -228,7 +247,9 @@ class RestApi
                 'Content-Type'  => 'application/atom+xml',
                 'GData-Version' => '3.0',
             ],
-            $entryXml
+			[
+				'body' => $entryXml
+			]
         );
     }
 
@@ -243,6 +264,8 @@ class RestApi
 		$crawler = new Crawler($worksheetsFeedXml);
 
 		$entryIds = $crawler->filter('default|entry default|id');
+
+		$entryXml = "";
 
 		/** @var \DOMElement $eid */
 		foreach ($entryIds as $eid) {
@@ -268,7 +291,7 @@ class RestApi
 
 		$entryXml = "<?xml version='1.0' encoding='UTF-8'?>" . PHP_EOL . preg_replace('/\<entry.*\>\<id\>/', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'><id>", $entryXml);
 
-		return $this->api->call(
+		return $this->api->request(
 			sprintf(self::SPREADSHEET_WORKSHEETS . '/%s/private/full/%s', $file->getGoogleId(), $file->getSheetId()),
 			'PUT',
 			[
@@ -277,13 +300,15 @@ class RestApi
 				'GData-Version' => '3.0',
 				'If-Match' => '*'
 			],
-			$entryXml
+			[
+				'body' => $entryXml
+			]
 		);
 	}
 
 	public function getWorksheetsFeed($fileId, $json = true)
 	{
-		$response = $this->api->call(
+		$response = $this->api->request(
 			self::SPREADSHEET_WORKSHEETS . '/' . $fileId . '/private/full' . ($json?'?alt=json':''),
 			'GET',
 			[
@@ -292,21 +317,19 @@ class RestApi
 			]
 		);
 
-		return $json?$response->json():$response->getBody()->getContents();
+		return $json?json_decode($response->getBody(), true):$response->getBody()->getContents();
 	}
 
 	public function getWorksheets($fileId)
 	{
-		$response = $this->api->call(
+		$response = json_decode($this->api->request(
 			self::SPREADSHEET_WORKSHEETS . '/' . $fileId . '/private/full?alt=json' ,
 			'GET',
 			[
 				'Accept' => 'application/json',
 			    'GData-Version' => '3.0'
 			]
-		);
-
-		$response = $response->json();
+		)->getBody(), true);
 
 		$result = [];
 		if (isset($response['feed']['entry'])) {
@@ -344,7 +367,7 @@ class RestApi
 
 	public function getCellsFeed(File $file)
 	{
-		$response = $this->api->call(
+		return json_decode($this->api->request(
 			sprintf(self::SPREADSHEET_CELL, $file->getGoogleId(), $file->getSheetId()) . '?alt=json',
 			'GET',
 			[
@@ -352,9 +375,7 @@ class RestApi
 				'Content-Type' => 'application/atom+xml',
 				'GData-Version' => '3.0'
 			]
-		);
-
-		return $response->json();
+		)->getBody(), true);
 	}
 
 	protected function countLines(CsvFile $csvFile)

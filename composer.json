@@ -9,15 +9,10 @@
 			"email": "miro@keboola.com"
 		}
 	],
-	"repositories": [
-		{
-			"type": "vcs",
-			"url": "git@bitbucket.org:keboola/google-client-bundle.git"
-		}
-	],
+	"repositories": [],
 	"require": {
-		"keboola/google-client-bundle": "2.*",
-		"keboola/syrup": "~2.3"
+		"keboola/google-client-bundle": "^4.0",
+		"keboola/syrup": "3.0.0-rc1 as 3.0.0"
 	},
 	"require-dev": {
 		"phpunit/phpunit": "3.7.*"
