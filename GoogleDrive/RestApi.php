@@ -174,16 +174,18 @@ class RestApi
                         'GData-Version' => '3.0',
                         'If-Match' => '*'
                     ],
-                    $this->templating->render(
-                        'KeboolaGoogleDriveWriterBundle:Feed:Cell/batch.xml.twig',
-                        [
-                            'csv' => $csvFile,
-                            'fileId' => $file->getGoogleId(),
-                            'worksheetId' => $file->getSheetId(),
-                            'limit' => $limit,
-                            'offset' => $offset
-                        ]
-                    )
+                    [
+						'body' => $this->templating->render(
+							'KeboolaGoogleDriveWriterBundle:Feed:Cell/batch.xml.twig',
+							[
+								'csv' => $csvFile,
+								'fileId' => $file->getGoogleId(),
+								'worksheetId' => $file->getSheetId(),
+								'limit' => $limit,
+								'offset' => $offset
+							]
+						)
+					]
                 );
 
 	            $errors = array_merge($errors, $this->validateResponse($response));
