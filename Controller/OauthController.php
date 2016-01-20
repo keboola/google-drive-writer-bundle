@@ -7,13 +7,13 @@
 
 namespace Keboola\Google\DriveWriterBundle\Controller;
 
-use Keboola\Encryption\EncryptorInterface;
 use Keboola\Google\DriveWriterBundle\Exception\ConfigurationException;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
 use Keboola\StorageApi\Client as StorageApi;
 use Keboola\Google\ClientBundle\Google\RestApi;
 use Keboola\Google\DriveWriterBundle\Exception\ParameterMissingException;
 use Keboola\StorageApi\ClientException;
+use Keboola\Syrup\Service\ObjectEncryptor;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -97,8 +97,8 @@ class OauthController extends BaseController
 				'userAgent' => $this->componentName
 			));
 
-			/** @var EncryptorInterface $encryptor */
-			$encryptor = $this->get('syrup.encryptor');
+			/** @var ObjectEncryptor $encryptor */
+			$encryptor = $this->get('syrup.object_encryptor');
 
 			$configuration = new Configuration($this->componentName, $encryptor);
 			$configuration->setStorageApi($storageApi);
@@ -108,7 +108,7 @@ class OauthController extends BaseController
 			);
 
 			$googleApi->setCredentials($tokens['access_token'], $tokens['refresh_token']);
-            $userData = json_decode($googleApi->request('/oauth2/v2/userinfo'), true);
+            $userData = json_decode($googleApi->request('/oauth2/v2/userinfo')->getBody(), true);
 
             if ($external) {
                 $this->container->get('session')->clear();
