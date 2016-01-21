@@ -4,21 +4,21 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "c3f759d89639e27e071d35c875ea02ce",
-    "content-hash": "6fee23939916206d5a6da6428ce6b2b4",
+    "hash": "055057fcd54d15ccc883908518ac04e2",
+    "content-hash": "af61f60f303651082afb8e288872c846",
     "packages": [
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.13.0",
+            "version": "3.13.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "dff1c76551777fcc5890d2d5324f9f9e5cdd4e3d"
+                "reference": "cc1796d1c21146cdcbfb7628aee816acb7b85e09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/dff1c76551777fcc5890d2d5324f9f9e5cdd4e3d",
-                "reference": "dff1c76551777fcc5890d2d5324f9f9e5cdd4e3d",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/cc1796d1c21146cdcbfb7628aee816acb7b85e09",
+                "reference": "cc1796d1c21146cdcbfb7628aee816acb7b85e09",
                 "shasum": ""
             },
             "require": {
@@ -84,7 +84,7 @@
                 "s3",
                 "sdk"
             ],
-            "time": "2016-01-15 02:01:24"
+            "time": "2016-01-19 22:46:22"
         },
         {
             "name": "defuse/php-encryption",
@@ -1647,16 +1647,16 @@
         },
         {
             "name": "keboola/syrup",
-            "version": "3.0.0-rc1",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/keboola/syrup.git",
-                "reference": "d5e153aa28498715d5e4ae58e15bce709692da6c"
+                "reference": "c80a85e5c07fd65550e8a558245d48fa46ba3c46"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keboola/syrup/zipball/d5e153aa28498715d5e4ae58e15bce709692da6c",
-                "reference": "d5e153aa28498715d5e4ae58e15bce709692da6c",
+                "url": "https://api.github.com/repos/keboola/syrup/zipball/c80a85e5c07fd65550e8a558245d48fa46ba3c46",
+                "reference": "c80a85e5c07fd65550e8a558245d48fa46ba3c46",
                 "shasum": ""
             },
             "require": {
@@ -1710,7 +1710,7 @@
                 }
             ],
             "description": "Syrup",
-            "time": "2016-01-18 13:26:16"
+            "time": "2016-01-21 10:03:22"
         },
         {
             "name": "kriswallsmith/assetic",
@@ -3567,13 +3567,13 @@
         {
             "alias": "3.0.0",
             "alias_normalized": "3.0.0.0",
-            "version": "3.0.0.0-RC1",
+            "version": "9999999-dev",
             "package": "keboola/syrup"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "keboola/syrup": 5
+        "keboola/syrup": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
