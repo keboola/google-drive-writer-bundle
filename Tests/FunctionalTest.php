@@ -455,6 +455,7 @@ class FunctionalTest extends AbstractFunctionalTest
             'id' => 0,
             'title' => 'Test Sheet',
             'tableId' => $this->tableId,
+			'targetFolder' => '0B8ceg4OWLR3lelQzMm9pcDEyNHc',
             'type' => 'sheet'
         ]);
 
@@ -462,6 +463,7 @@ class FunctionalTest extends AbstractFunctionalTest
             'id' => 1,
             'title' => 'Test File',
             'tableId' => $this->tableId,
+			'targetFolder' => '0B8ceg4OWLR3lelQzMm9pcDEyNHc',
             'type' => 'file'
         ]);
 

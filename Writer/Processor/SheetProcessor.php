@@ -7,7 +7,6 @@
 
 namespace Keboola\Google\DriveWriterBundle\Writer\Processor;
 
-use GuzzleHttp\Message\Response;
 use GuzzleHttp\Exception\RequestException;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Syrup\Exception\UserException;

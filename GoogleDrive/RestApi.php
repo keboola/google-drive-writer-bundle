@@ -53,7 +53,6 @@ class RestApi
 	public function insertFile(File $file)
 	{
 		$convert = ($file->getType() == File::TYPE_SHEET)?'true':'false';
-
         $title = $file->isOperationCreate()?$file->getTitle() . ' (' . date('Y-m-d H:i:s') . ')':$file->getTitle();
 
         $body = [
@@ -61,7 +60,9 @@ class RestApi
         ];
 
         if (null != $file->getTargetFolder()) {
-            $body['parents'][] = ['id' => $file->getTargetFolder()];
+            $body['parents'][] = [
+				'id' => $file->getTargetFolder()
+			];
         }
 
 		$response = $this->api->request(
@@ -73,9 +74,7 @@ class RestApi
 				'X-Upload-Content-Length' => $file->getSize()
 			],
 			[
-				'json' => [
-					'title' => $file->getTitle()
-				]
+				'json' => $body
 			]
 		);
 
