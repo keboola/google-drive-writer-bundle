@@ -1467,17 +1467,17 @@
         },
         {
             "name": "keboola/google-client-bundle",
-            "version": "4.0.0",
+            "version": "4.0.1",
             "target-dir": "Keboola/Google/ClientBundle",
             "source": {
                 "type": "git",
                 "url": "https://github.com/keboola/google-client-bundle.git",
-                "reference": "3c554026aa55cbfc25d951d1377b9b26c9c0404b"
+                "reference": "d96fe38b55c1afaaa252635dabeda798df4c147a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keboola/google-client-bundle/zipball/3c554026aa55cbfc25d951d1377b9b26c9c0404b",
-                "reference": "3c554026aa55cbfc25d951d1377b9b26c9c0404b",
+                "url": "https://api.github.com/repos/keboola/google-client-bundle/zipball/d96fe38b55c1afaaa252635dabeda798df4c147a",
+                "reference": "d96fe38b55c1afaaa252635dabeda798df4c147a",
                 "shasum": ""
             },
             "require": {
@@ -1507,7 +1507,7 @@
                 "keboola",
                 "rest"
             ],
-            "time": "2016-01-19 12:54:52"
+            "time": "2016-02-09 14:35:42"
         },
         {
             "name": "keboola/php-encryption",
@@ -1655,7 +1655,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keboola/syrup/zipball/c80a85e5c07fd65550e8a558245d48fa46ba3c46",
+                "url": "https://api.github.com/repos/keboola/syrup/zipball/dbfa287321708f9170df249e5efe3ca1e6738046",
                 "reference": "c80a85e5c07fd65550e8a558245d48fa46ba3c46",
                 "shasum": ""
             },
