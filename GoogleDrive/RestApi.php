@@ -100,6 +100,7 @@ class RestApi
 			]
 		);
 
+
 		$locationUri = $response->getHeaderLine('Location');
 
 		return $this->putFile($file, $locationUri, false);
@@ -111,13 +112,47 @@ class RestApi
 			$locationUri . '&convert=' . $convert,
 			'PUT',
 			[
-				'Content-Type' => 'application/json',
+				'Content-Type' => 'text/csv',
 				'Content-Length' => $file->getSize()
 			],
 			[
 				'body' => fopen($file->getPathname(), 'r')
 			]
 		);
+
+		if ($response->getStatusCode() == 308) {
+
+			// get upload status
+			$response = $this->api->request(
+				$locationUri . '&convert=' . $convert,
+				'PUT',
+				[
+					'Content-Type' => 'text/csv',
+					'Content-Length' => 0,
+					'Content-Range' => 'bytes */*'
+				]
+			);
+
+			if ($response->getStatusCode() == 308) {
+				if ($response->getHeaderLine('Range') == null) {
+					// workaround for bug, when uploading file from url
+					$response = $this->api->request(
+						$locationUri . '&convert=' . $convert,
+						'PUT',
+						[
+							'Content-Type' => 'text/csv',
+							'Content-Length' => $file->getSize()
+						],
+						[
+							'body' => file_get_contents($file->getPathname())
+						]
+					);
+				} else {
+					//@todo: resume upload
+				}
+			}
+
+		}
 
 		return json_decode($response->getBody(), true);
 	}
@@ -280,16 +315,6 @@ class RestApi
 		// update colCount and rowCount
 		$entryXml = preg_replace('/\<gs\:colCount\>.*\<\/gs\:colCount\>/', '<gs:colCount>'.$colCount.'</gs:colCount>', $entryXml);
 		$entryXml = preg_replace('/\<gs\:rowCount\>.*\<\/gs\:rowCount\>/', '<gs:rowCount>'.$rowCount.'</gs:rowCount>', $entryXml);
-
-//		$entryXml = $this->templating->render(
-//			'KeboolaGoogleDriveWriterBundle:Feed:Worksheet:entry.xml.twig',
-//			[
-//				'csv' => new CsvFile($file->getPathname()),
-//				'fileId' => $file->getGoogleId(),
-//				'worksheetId' => $file->getSheetId()
-//			]
-//		);
-
 		$entryXml = "<?xml version='1.0' encoding='UTF-8'?>" . PHP_EOL . preg_replace('/\<entry.*\>\<id\>/', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'><id>", $entryXml);
 
 		return $this->api->request(
