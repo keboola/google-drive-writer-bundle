@@ -36,6 +36,7 @@ class RestApi
 	public function __construct(GoogleApi $api, EngineInterface $templating)
 	{
 		$this->api = $api;
+		$this->api->setBackoffsCount(9);
 		$this->templating = $templating;
 	}
 

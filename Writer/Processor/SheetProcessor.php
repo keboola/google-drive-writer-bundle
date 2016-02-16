@@ -76,7 +76,19 @@ class SheetProcessor extends CommonProcessor
                     ]);
 
                 } catch (RequestException $e) {
-                    throw new UserException("Update failed: " . $e->getMessage(), $e, [
+                    $statusCode = $e->getResponse()->getStatusCode();
+                    if ($statusCode >= 500 && $statusCode < 600) {
+                        throw new UserException(
+                            sprintf(
+                                "Google Drive Server Error: %s - %s. Please try again later.",
+                                $statusCode,
+                                $e->getResponse()->getReasonPhrase()
+                            ),
+                            $e,
+                            ['file' => $file->toArray()]
+                        );
+                    }
+                    throw new UserException("Cells update failed: " . $e->getMessage(), $e, [
                         'file' => $file->toArray()
                     ]);
                 }
