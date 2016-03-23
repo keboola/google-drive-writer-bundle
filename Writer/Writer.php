@@ -8,6 +8,7 @@
 namespace Keboola\Google\DriveWriterBundle\Writer;
 
 use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Exception\ClientException;
 use Keboola\Google\DriveWriterBundle\Entity\Account;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
@@ -72,7 +73,7 @@ class Writer
             }
             $this->processor = $this->getProcessor($file->getType());
             return $this->processor->process($file);
-        } catch (BadResponseException $e) {
+        } catch (ClientException $e) {
             throw new UserException($e->getMessage(), $e, [
                 'file' => $file->toArray()
             ]);
