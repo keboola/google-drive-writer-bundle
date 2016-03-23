@@ -41,8 +41,9 @@ class FileProcessor extends CommonProcessor
                         'file' => $file->toArray(),
                         'response' => $response
                     ]);
+                } else {
+                    throw $e;
                 }
-
             }
         }
 

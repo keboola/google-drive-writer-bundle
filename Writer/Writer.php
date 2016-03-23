@@ -65,14 +65,18 @@ class Writer
 
     public function process(File $file)
     {
-        if ($this->remoteFileExists($file)) {
-            $file->setGoogleId(null);
-            $file->setSheetId(null);
+        try {
+            if ($this->remoteFileExists($file)) {
+                $file->setGoogleId(null);
+                $file->setSheetId(null);
+            }
+            $this->processor = $this->getProcessor($file->getType());
+            return $this->processor->process($file);
+        } catch (BadResponseException $e) {
+            throw new UserException($e->getMessage(), $e, [
+                'file' => $file->toArray()
+            ]);
         }
-
-        $this->processor = $this->getProcessor($file->getType());
-
-        return $this->processor->process($file);
     }
 
 	public function listFiles($params = [])
