@@ -47,18 +47,11 @@ class Writer
 
         try {
             $remoteFile = $this->getFile($file->getGoogleId());
-
-            if ($remoteFile['labels']['trashed'] === false) {
-                // file is in trash
-                return false;
-            }
-
-            return true;
+            return !$remoteFile['labels']['trashed'];
         } catch (BadResponseException $e) {
             if ($e->getResponse()->getStatusCode() == 404) {
                 return false;
             }
-
             throw $e;
         }
     }

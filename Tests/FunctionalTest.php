@@ -499,5 +499,4 @@ class FunctionalTest extends AbstractFunctionalTest
 
         $this->assertEquals('success', $job->getStatus());
     }
-
 }

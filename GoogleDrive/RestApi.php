@@ -86,6 +86,11 @@ class RestApi
 
 	public function updateFile(File $file)
 	{
+		$body = ['title' => $file->getTitle()];
+		if ($file->getTargetFolder()) {
+			$body['parents'] = [['id' => $file->getTargetFolder()]];
+		}
+
 		$response = $this->api->request(
 			self::FILE_UPLOAD . '/' . $file->getGoogleId() . '?uploadType=resumable',
 			'PUT',
@@ -95,12 +100,9 @@ class RestApi
 				'X-Upload-Content-Length' => $file->getSize()
 			],
 			[
-				'json' => [
-					'title' => $file->getTitle()
-				]
+				'json' => $body
 			]
 		);
-
 
 		$locationUri = $response->getHeaderLine('Location');
 
