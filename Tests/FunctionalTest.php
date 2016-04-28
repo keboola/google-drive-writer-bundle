@@ -472,8 +472,34 @@ class FunctionalTest extends AbstractFunctionalTest
 
         // run
         $job = $this->processJob($this->componentName . '/run');
+		$this->assertEquals('success', $job->getStatus());
 
-        $this->assertEquals('success', $job->getStatus());
+		// update files
+		$files = $this->configuration->getFiles($this->accountId);
+
+		/** @var File $file */
+		$file = $files[0];
+		$file->setTitle('Test Sheet Updated');
+		$this->configuration->updateFile($this->accountId, $file->getId(), $file->toArray());
+
+		/** @var File $file2 */
+		$file2 = $files[1];
+		$file2->setTitle('Test File Updated');
+		$this->configuration->updateFile($this->accountId, $file2->getId(), $file2->toArray());
+
+		$this->httpClient->restart();
+		$job = $this->processJob($this->componentName . '/run');
+		$this->assertEquals('success', $job->getStatus());
+
+		$updatedFiles = $this->configuration->getFiles($this->accountId);
+
+		/** @var File $updatedFile */
+		$updatedFile = $updatedFiles[0];
+		/** @var File $updatedFile2 */
+		$updatedFile2 = $updatedFiles[1];
+
+		$this->assertEquals($file->getGoogleId(), $updatedFile->getGoogleId());
+		$this->assertEquals($file2->getGoogleId(), $updatedFile2->getGoogleId());
     }
 
     public function testRunExternal()

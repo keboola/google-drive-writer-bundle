@@ -87,6 +87,7 @@ class RestApi
 	public function updateFile(File $file)
 	{
 		$body = ['title' => $file->getTitle()];
+
 		if ($file->getTargetFolder()) {
 			$body['parents'] = [['id' => $file->getTargetFolder()]];
 		}

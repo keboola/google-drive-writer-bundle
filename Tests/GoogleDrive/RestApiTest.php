@@ -7,6 +7,7 @@
 
 namespace Keboola\Google\DriveWriterBundle\Tests\GoogleDrive;
 
+use GuzzleHttp\Exception\ClientException;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
 use Keboola\Syrup\Service\ObjectEncryptor;
@@ -109,8 +110,9 @@ class RestApiTest extends WebTestCase
 		$file = $this->createTestFile();
 		$resFile = $this->restApi->insertFile($file);
 		$response = $this->restApi->getFile($resFile['id']);
+
 		$file->setGoogleId($response['id']);
-		$file->setTitle('RenamedAndMovedTestFile');
+		$file->setTitle('MovedTestFile');
 		$file->setTargetFolder('0B8ceg4OWLR3ld0czTWxfd3RmQnc');
 		$response2 = $this->restApi->updateFile($file);
 
@@ -118,11 +120,36 @@ class RestApiTest extends WebTestCase
 		$this->assertArrayHasKey('kind', $response2);
 		$this->assertEquals('drive#file', $response2['kind']);
 		$this->assertArrayHasKey('title', $response2);
-		$this->assertContains('RenamedAndMovedTestFile', $response2['title']);
+		$this->assertContains('MovedTestFile', $response2['title']);
 		$this->assertEquals('0B8ceg4OWLR3ld0czTWxfd3RmQnc', $response2['parents'][0]['id']);
+
+		$file->setTitle('RenamedTestFile');
+		$response3 = $this->restApi->updateFile($file);
+
+		$this->assertEquals($file->getGoogleId(), $response3['id']);
+		$this->assertContains($file->getTitle(), $response3['title']);
 
 		// cleanup
 		$this->restApi->deleteFile($file);
+	}
+
+	public function testDeleteFile()
+	{
+		$file = $this->createTestFile();
+		$resFile = $this->restApi->insertFile($file);
+		$response = $this->restApi->getFile($resFile['id']);
+		$file->setGoogleId($response['id']);
+
+		$this->restApi->deleteFile($file);
+		$exception = null;
+		try {
+			$this->restApi->getFile($resFile['id']);
+		} catch (ClientException $e) {
+			$exception = $e;
+		}
+
+		$this->assertNotNull($exception);
+		$this->assertEquals(404, $exception->getResponse()->getStatusCode());
 	}
 
 	public function testGetWorksheets()

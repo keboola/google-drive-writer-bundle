@@ -47,7 +47,10 @@ class Writer
 
         try {
             $remoteFile = $this->getFile($file->getGoogleId());
-            return !$remoteFile['labels']['trashed'];
+            if ($remoteFile['labels']['trashed'] === true) {
+                return false;
+            }
+            return true;
         } catch (BadResponseException $e) {
             if ($e->getResponse()->getStatusCode() == 404) {
                 return false;
@@ -59,7 +62,7 @@ class Writer
     public function process(File $file)
     {
         try {
-            if ($this->remoteFileExists($file)) {
+            if (!$this->remoteFileExists($file)) {
                 $file->setGoogleId(null);
                 $file->setSheetId(null);
             }

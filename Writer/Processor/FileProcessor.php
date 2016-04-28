@@ -15,8 +15,10 @@ class FileProcessor extends CommonProcessor
     public function process(File $file)
     {
         if (null == $file->getGoogleId() || $file->isOperationCreate()) {
+
             // create new file
             $response = $this->googleDriveApi->insertFile($file);
+
             // update file with googleId
             $file->setGoogleId($response['id']);
             $this->logger->info("File created", [
@@ -27,6 +29,7 @@ class FileProcessor extends CommonProcessor
             // overwrite existing file
             try {
                 $response = $this->googleDriveApi->updateFile($file);
+
                 $this->logger->info("File updated", [
                     'file' => $file->toArray(),
                     'response' => $response
