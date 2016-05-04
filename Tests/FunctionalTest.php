@@ -38,6 +38,7 @@ class FunctionalTest extends AbstractFunctionalTest
 
 	protected $fileTitle = 'Google Drive TEST';
 	protected $tableId = 'in.c-wr-google-drive.test';
+	protected $rsTableId = 'in.c-wr-google-drive-rs.test';
 
 	protected $testCsvPath;
 
@@ -78,12 +79,21 @@ class FunctionalTest extends AbstractFunctionalTest
 			$this->storageApiClient->dropTable($this->tableId);
 		}
 
+		if ($this->storageApiClient->tableExists($this->rsTableId)) {
+			$this->storageApiClient->dropTable($this->rsTableId);
+		}
+
 		if (!$this->storageApiClient->bucketExists('in.c-wr-google-drive')) {
 			$this->storageApiClient->createBucket('wr-google-drive', Client::STAGE_IN, 'Google Drive IN bucket');
 		}
 
+		if (!$this->storageApiClient->bucketExists('in.c-wr-google-drive-rs')) {
+			$this->storageApiClient->createBucket('wr-google-drive', Client::STAGE_IN, 'Google Drive IN bucket', 'redshift');
+		}
+
 		$csvFile = new CsvFile($this->testCsvPath);
 		$this->storageApiClient->createTable('in.c-wr-google-drive', 'test', $csvFile);
+		$this->storageApiClient->createTable('in.c-wr-google-drive-rs', 'test', $csvFile);
 	}
 
 	protected function initEnv()
@@ -467,8 +477,28 @@ class FunctionalTest extends AbstractFunctionalTest
             'type' => 'file'
         ]);
 
-        $this->configuration->addFile($this->accountId, $file->toArray());
-        $this->configuration->addFile($this->accountId, $file2->toArray());
+		$file3 = new File([
+			'id' => 2,
+			'title' => 'Test Sheet Redshift',
+			'tableId' => $this->rsTableId,
+			'targetFolder' => '0B8ceg4OWLR3lelQzMm9pcDEyNHc',
+			'type' => 'sheet'
+		]);
+
+		$file4 = new File([
+			'id' => 3,
+			'title' => 'Test File Redshift',
+			'tableId' => $this->rsTableId,
+			'targetFolder' => '0B8ceg4OWLR3lelQzMm9pcDEyNHc',
+			'type' => 'file'
+		]);
+
+		$filesToSync = [$file, $file2, $file3, $file4];
+
+		/** @var $f File */
+		foreach ($filesToSync as $f) {
+			$this->configuration->addFile($this->accountId, $f->toArray());
+		}
 
         // run
         $job = $this->processJob($this->componentName . '/run');
@@ -487,6 +517,12 @@ class FunctionalTest extends AbstractFunctionalTest
 		$file2->setTitle('Test File Updated');
 		$this->configuration->updateFile($this->accountId, $file2->getId(), $file2->toArray());
 
+		/** @var File $file3 */
+		$file3 = $files[2];
+
+		/** @var File $file4 */
+		$file4 = $files[3];
+
 		$this->httpClient->restart();
 		$job = $this->processJob($this->componentName . '/run');
 		$this->assertEquals('success', $job->getStatus());
@@ -500,6 +536,8 @@ class FunctionalTest extends AbstractFunctionalTest
 
 		$this->assertEquals($file->getGoogleId(), $updatedFile->getGoogleId());
 		$this->assertEquals($file2->getGoogleId(), $updatedFile2->getGoogleId());
+		$this->assertEquals('Test File Redshift', $file4->getTitle());
+		$this->assertEquals('Test Sheet Redshift', $file3->getTitle());
     }
 
     public function testRunExternal()

@@ -13,6 +13,7 @@ use Keboola\Google\DriveWriterBundle\Writer\Configuration;
 use Keboola\Google\DriveWriterBundle\Writer\WriterFactory;
 use Keboola\StorageApi\ClientException;
 use Keboola\StorageApi\Options\ListFilesOptions;
+use Keboola\StorageApi\TableExporter;
 use Keboola\Temp\Temp;
 use Monolog\Logger;
 use Keboola\Syrup\Exception\UserException;
@@ -136,13 +137,11 @@ class Executor extends BaseExecutor
 
             /** @var Account $account */
             foreach ($accounts as $accountId => $account) {
-
                 $writer = $this->writerFactory->create($account);
                 $files = $account->getFiles();
 
                 /** @var File $file */
                 foreach ($files as $file) {
-
                     if ($fileFilter != null && $file->getId() != $fileFilter) {
                         continue;
                     }
@@ -150,7 +149,8 @@ class Executor extends BaseExecutor
                     $file->setPathname($this->temp->createTmpFile()->getPathname());
 
                     try {
-                        $this->storageApi->exportTable($file->getTableId(), $file->getPathname());
+                        $tableExporter = new TableExporter($this->storageApi);
+                        $tableExporter->exportTable($file->getTableId(), $file->getPathname(), []);
                     } catch (ClientException $e) {
                         throw new UserException($e->getMessage(), $e, [
                             'file' => $file->toArray()
@@ -158,7 +158,6 @@ class Executor extends BaseExecutor
                     }
 
                     $file = $writer->process($file);
-
                     $status[$account->getAccountName()][$file->getTitle()] = 'ok';
                 }
 
