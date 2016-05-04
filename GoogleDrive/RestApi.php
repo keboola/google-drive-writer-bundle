@@ -137,7 +137,9 @@ class RestApi
 				]
 			);
 
-			if ($response->getStatusCode() == 308) {
+			$i = 0;
+			$maxTries = 7;
+			while ($response->getStatusCode() == 308 && $i < $maxTries) {
 				if ($response->getHeaderLine('Range') == null) {
 					// workaround for bug, when uploading file from url
 					$response = $this->api->request(
@@ -148,12 +150,33 @@ class RestApi
 							'Content-Length' => $file->getSize()
 						],
 						[
-							'body' => file_get_contents($file->getPathname())
+							'body' => fopen($file->getPathname(), 'r')
 						]
 					);
 				} else {
-					//@todo: resume upload
+					// resume upload
+					$range = explode('-', $response->getHeaderLine('Range'));
+					$remainingSize = $file->getSize() - $range[1]+1;
+
+					// ffwd to byte where we left of
+					$fh = fopen($file->getPathname(), 'r');
+					fseek($fh, $range[1]+1);
+
+					$response = $this->api->request(
+						$locationUri,
+						'PUT',
+						[
+							'Content-Length' => $remainingSize,
+							'Content-Range' => sprintf('bytes %s/%s', $range[1]+1, $file->getSize())
+						],
+						[
+							'body' => $fh
+						]
+					);
 				}
+
+				sleep(pow(2, $i));
+				$i++;
 			}
 
 		}
