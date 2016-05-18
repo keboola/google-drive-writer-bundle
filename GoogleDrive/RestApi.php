@@ -23,9 +23,9 @@ class RestApi
 	/** @var EngineInterface */
 	protected $templating;
 
-	const FILE_UPLOAD = 'https://www.googleapis.com/upload/drive/v2/files';
+	const FILE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
 
-	const FILE_METADATA = 'https://www.googleapis.com/drive/v2/files';
+	const FILE_METADATA = 'https://www.googleapis.com/drive/v3/files';
 
 	const SPREADSHEET_CELL_BATCH = 'https://spreadsheets.google.com/feeds/cells/%s/%s/private/full/batch';
 
@@ -57,8 +57,12 @@ class RestApi
         $title = $file->isOperationCreate()?$file->getTitle() . ' (' . date('Y-m-d H:i:s') . ')':$file->getTitle();
 
         $body = [
-            'title' => $title
+            'name' => $title
         ];
+
+		if ($convert) {
+			$body['mimeType'] = 'application/vnd.google-apps.spreadsheet';
+		}
 
         if (null != $file->getTargetFolder()) {
             $body['parents'][] = [
@@ -67,10 +71,11 @@ class RestApi
         }
 
 		$response = $this->api->request(
-			self::FILE_UPLOAD . '?uploadType=resumable&convert=' . $convert,
+			self::FILE_UPLOAD . '?uploadType=resumable',
 			'POST',
 			[
 				'Content-Type' => 'application/json; charset=UTF-8',
+				'Content-Length' => mb_strlen(serialize($body), '8bit'),
 				'X-Upload-Content-Type' => 'text/csv',
 				'X-Upload-Content-Length' => $file->getSize()
 			],
@@ -81,20 +86,27 @@ class RestApi
 
 		$locationUri = $response->getHeaderLine('Location');
 
-		return $this->putFile($file, $locationUri, $convert);
+		return $this->putFile($file, $locationUri);
 	}
 
 	public function updateFile(File $file)
 	{
-		$body = ['title' => $file->getTitle()];
+		$res = $this->getFile($file->getGoogleId());
 
+		$url = sprintf('%s/%s?uploadType=resumable', self::FILE_UPLOAD, $file->getGoogleId());
+		$body = ['name' => $file->getTitle()];
+
+		if (!empty($res['parents'])) {
+			$removeParents = implode(',', $res['parents']);
+			$url .= '&removeParents=' . $removeParents;
+		}
 		if ($file->getTargetFolder()) {
-			$body['parents'] = [['id' => $file->getTargetFolder()]];
+			$url .= '&addParents=' . $file->getTargetFolder();
 		}
 
 		$response = $this->api->request(
-			self::FILE_UPLOAD . '/' . $file->getGoogleId() . '?uploadType=resumable',
-			'PUT',
+			$url,
+			'PATCH',
 			[
 				'Content-Type' => 'application/json; charset=UTF-8',
 				'X-Upload-Content-Type' => 'text/csv',
@@ -107,13 +119,13 @@ class RestApi
 
 		$locationUri = $response->getHeaderLine('Location');
 
-		return $this->putFile($file, $locationUri, false);
+		return $this->putFile($file, $locationUri);
 	}
 
-	protected function putFile(File $file, $locationUri, $convert)
+	protected function putFile(File $file, $locationUri)
 	{
 		$response = $this->api->request(
-			$locationUri . '&convert=' . $convert,
+			$locationUri,
 			'PUT',
 			[
 				'Content-Type' => 'text/csv',
@@ -125,10 +137,9 @@ class RestApi
 		);
 
 		if ($response->getStatusCode() == 308) {
-
 			// get upload status
 			$response = $this->api->request(
-				$locationUri . '&convert=' . $convert,
+				$locationUri,
 				'PUT',
 				[
 					'Content-Type' => 'text/csv',
@@ -140,45 +151,28 @@ class RestApi
 			$i = 0;
 			$maxTries = 7;
 			while ($response->getStatusCode() == 308 && $i < $maxTries) {
-				if ($response->getHeaderLine('Range') == null) {
-					// workaround for bug, when uploading file from url
-					$response = $this->api->request(
-						$locationUri . '&convert=' . $convert,
-						'PUT',
-						[
-							'Content-Type' => 'text/csv',
-							'Content-Length' => $file->getSize()
-						],
-						[
-							'body' => fopen($file->getPathname(), 'r')
-						]
-					);
-				} else {
-					// resume upload
-					$range = explode('-', $response->getHeaderLine('Range'));
-					$remainingSize = $file->getSize() - $range[1]+1;
+				$range = explode('-', $response->getHeaderLine('Range'));
+				$remainingSize = $file->getSize() - $range[1]+1;
 
-					// ffwd to byte where we left of
-					$fh = fopen($file->getPathname(), 'r');
-					fseek($fh, $range[1]+1);
+				// ffwd to byte where we left of
+				$fh = fopen($file->getPathname(), 'r');
+				fseek($fh, $range[1]+1);
 
-					$response = $this->api->request(
-						$locationUri,
-						'PUT',
-						[
-							'Content-Length' => $remainingSize,
-							'Content-Range' => sprintf('bytes %s/%s', $range[1]+1, $file->getSize())
-						],
-						[
-							'body' => $fh
-						]
-					);
-				}
+				$response = $this->api->request(
+					$locationUri,
+					'PUT',
+					[
+						'Content-Length' => $remainingSize,
+						'Content-Range' => sprintf('bytes %s/%s', $range[1]+1, $file->getSize())
+					],
+					[
+						'body' => $fh
+					]
+				);
 
 				sleep(pow(2, $i));
 				$i++;
 			}
-
 		}
 
 		return json_decode($response->getBody(), true);
@@ -186,7 +180,10 @@ class RestApi
 
     public function getFile($id)
     {
-		$response = $this->api->request(self::FILE_METADATA . '/' . $id, 'GET');
+		$response = $this->api->request(
+			sprintf('%s/%s?fields=%s', self::FILE_METADATA, $id, urlencode('id,name,mimeType,parents,trashed')),
+			'GET'
+		);
         return json_decode($response->getBody(), true);
     }
 

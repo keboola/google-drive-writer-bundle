@@ -90,22 +90,26 @@ class Executor extends BaseExecutor
 
             foreach ($uploadedFiles as $uploadedFile) {
 
+                $tmpFile = $this->temp->createTmpFile('wr-gd');
+                file_put_contents($tmpFile->getPathname(), fopen($uploadedFile['url'], 'r'));
+
                 $file = new File([
                     'id' => $uploadedFile['id'],
                     'title' => $uploadedFile['name'],
                     'targetFolder' => isset($options['external']['targetFolder'])?$options['external']['targetFolder']:null,
                     'type' => File::TYPE_FILE,
-                    'pathname' => $uploadedFile['url'],
+                    'pathname' => $tmpFile,
                     'size' => $uploadedFile['sizeBytes']
                 ]);
 
                 $gdFiles = $writer->listFiles(
-                    ['q' => "trashed=false and title='" . $uploadedFile['name'] . "'"]
+                    ['q' => "trashed=false and name='" . $uploadedFile['name'] . "'"]
                 );
 
-                $lastGdFile = array_shift($gdFiles['items']);
-
-                $file->setGoogleId($lastGdFile['id']);
+                if (!empty($gdFiles['items'])) {
+                    $lastGdFile = array_shift($gdFiles['items']);
+                    $file->setGoogleId($lastGdFile['id']);
+                }
 
                 $file = $writer->process($file);
 

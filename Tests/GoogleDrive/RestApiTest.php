@@ -79,8 +79,8 @@ class RestApiTest extends WebTestCase
 		$this->assertNotEmpty($response);
 		$this->assertArrayHasKey('kind', $response);
 		$this->assertEquals('drive#file', $response['kind']);
-		$this->assertArrayHasKey('title', $response);
-		$this->assertContains($file->getTitle(), $response['title']);
+		$this->assertArrayHasKey('name', $response);
+		$this->assertContains($file->getTitle(), $response['name']);
 
 		// cleanup
 		$file->setGoogleId($response['id']);
@@ -95,10 +95,10 @@ class RestApiTest extends WebTestCase
         $response = $this->restApi->getFile($resFile['id']);
 
         $this->assertNotEmpty($response);
-        $this->assertArrayHasKey('kind', $response);
-        $this->assertEquals('drive#file', $response['kind']);
-        $this->assertArrayHasKey('title', $response);
-        $this->assertContains($file->getTitle(), $response['title']);
+        $this->assertArrayHasKey('id', $response);
+        $this->assertArrayHasKey('name', $response);
+		$this->assertArrayHasKey('parents', $response);
+        $this->assertContains($file->getTitle(), $response['name']);
 
         // cleanup
         $file->setGoogleId($response['id']);
@@ -114,20 +114,20 @@ class RestApiTest extends WebTestCase
 		$file->setGoogleId($response['id']);
 		$file->setTitle('MovedTestFile');
 		$file->setTargetFolder('0B8ceg4OWLR3ld0czTWxfd3RmQnc');
-		$response2 = $this->restApi->updateFile($file);
+		$this->restApi->updateFile($file);
+
+		$response2 = $this->restApi->getFile($resFile['id']);
 
 		$this->assertNotEmpty($response2);
-		$this->assertArrayHasKey('kind', $response2);
-		$this->assertEquals('drive#file', $response2['kind']);
-		$this->assertArrayHasKey('title', $response2);
-		$this->assertContains('MovedTestFile', $response2['title']);
-		$this->assertEquals('0B8ceg4OWLR3ld0czTWxfd3RmQnc', $response2['parents'][0]['id']);
+		$this->assertArrayHasKey('name', $response2);
+		$this->assertContains('MovedTestFile', $response2['name']);
+		$this->assertEquals('0B8ceg4OWLR3ld0czTWxfd3RmQnc', $response2['parents'][0]);
 
 		$file->setTitle('RenamedTestFile');
-		$response3 = $this->restApi->updateFile($file);
-
+		$this->restApi->updateFile($file);
+		$response3 = $this->restApi->getFile($resFile['id']);
 		$this->assertEquals($file->getGoogleId(), $response3['id']);
-		$this->assertContains($file->getTitle(), $response3['title']);
+		$this->assertContains($file->getTitle(), $response3['name']);
 
 		// cleanup
 		$this->restApi->deleteFile($file);
@@ -140,16 +140,8 @@ class RestApiTest extends WebTestCase
 		$response = $this->restApi->getFile($resFile['id']);
 		$file->setGoogleId($response['id']);
 
-		$this->restApi->deleteFile($file);
-		$exception = null;
-		try {
-			$this->restApi->getFile($resFile['id']);
-		} catch (ClientException $e) {
-			$exception = $e;
-		}
-
-		$this->assertNotNull($exception);
-		$this->assertEquals(404, $exception->getResponse()->getStatusCode());
+		$response = $this->restApi->deleteFile($file);
+		$this->assertEquals(204, $response->getStatusCode());
 	}
 
 	public function testGetWorksheets()
@@ -272,5 +264,16 @@ class RestApiTest extends WebTestCase
 
 		// cleanup
 		$this->restApi->deleteFile($file);
+	}
+
+	public function testListFiles()
+	{
+		$file = $this->createTestFile();
+		$fileRes = $this->restApi->insertFile($file);
+		$response = $this->restApi->listFiles([
+			'q' => "trashed=false and name='" . $fileRes['name'] . "'"
+		]);
+
+		$this->assertEquals($fileRes['name'], $response['files'][0]['name']);
 	}
 }

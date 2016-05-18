@@ -47,7 +47,7 @@ class Writer
 
         try {
             $remoteFile = $this->getFile($file->getGoogleId());
-            if ($remoteFile['labels']['trashed'] === true) {
+            if ($remoteFile['trashed'] === true) {
                 return false;
             }
             return true;
