@@ -8,10 +8,12 @@
 
 namespace Keboola\Google\DriveWriterBundle\GoogleDrive;
 
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Response;
 use Keboola\Csv\CsvFile;
 use Keboola\Google\ClientBundle\Google\RestApi as GoogleApi;
 use Keboola\Google\DriveWriterBundle\Entity\File;
+use Keboola\Syrup\Exception\ApplicationException;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\Templating\EngineInterface;
 
@@ -56,6 +58,8 @@ class RestApi
 		$convert = ($file->getType() == File::TYPE_SHEET)?'true':'false';
         $title = $file->isOperationCreate()?$file->getTitle() . ' (' . date('Y-m-d H:i:s') . ')':$file->getTitle();
 
+		$url = sprintf('%s/%s?uploadType=resumable', self::FILE_UPLOAD, $file->getGoogleId());
+
         $body = [
             'name' => $title
         ];
@@ -64,14 +68,12 @@ class RestApi
 			$body['mimeType'] = 'application/vnd.google-apps.spreadsheet';
 		}
 
-        if (null != $file->getTargetFolder()) {
-            $body['parents'][] = [
-				'id' => $file->getTargetFolder()
-			];
-        }
+		if ($file->getTargetFolder()) {
+			$url .= '&addParents=' . $file->getTargetFolder();
+		}
 
 		$response = $this->api->request(
-			self::FILE_UPLOAD . '?uploadType=resumable',
+			$url,
 			'POST',
 			[
 				'Content-Type' => 'application/json; charset=UTF-8',
@@ -124,55 +126,66 @@ class RestApi
 
 	protected function putFile(File $file, $locationUri)
 	{
-		$response = $this->api->request(
-			$locationUri,
-			'PUT',
-			[
-				'Content-Type' => 'text/csv',
-				'Content-Length' => $file->getSize()
-			],
-			[
-				'body' => fopen($file->getPathname(), 'r')
-			]
-		);
-
-		if ($response->getStatusCode() == 308) {
-			// get upload status
+		try {
 			$response = $this->api->request(
 				$locationUri,
 				'PUT',
 				[
 					'Content-Type' => 'text/csv',
-					'Content-Length' => 0,
-					'Content-Range' => 'bytes */*'
+					'Content-Length' => $file->getSize()
+				],
+				[
+					'body' => fopen($file->getPathname(), 'r')
 				]
 			);
-
-			$i = 0;
-			$maxTries = 7;
-			while ($response->getStatusCode() == 308 && $i < $maxTries) {
-				$range = explode('-', $response->getHeaderLine('Range'));
-				$remainingSize = $file->getSize() - $range[1]+1;
-
-				// ffwd to byte where we left of
-				$fh = fopen($file->getPathname(), 'r');
-				fseek($fh, $range[1]+1);
-
+		} catch (ClientException $e) {
+			$response = $e->getResponse();
+			if ($response->getStatusCode() >= 300) {
+				// get upload status
 				$response = $this->api->request(
 					$locationUri,
 					'PUT',
 					[
-						'Content-Length' => $remainingSize,
-						'Content-Range' => sprintf('bytes %s/%s', $range[1]+1, $file->getSize())
-					],
-					[
-						'body' => $fh
+						'Content-Type' => 'text/csv',
+						'Content-Length' => 0,
+						'Content-Range' => 'bytes */*'
 					]
 				);
 
-				sleep(pow(2, $i));
-				$i++;
+				$i = 0;
+				$maxTries = 7;
+				while ($response->getStatusCode() == 308 && $i < $maxTries) {
+					$range = explode('-', $response->getHeaderLine('Range'));
+					$remainingSize = $file->getSize() - $range[1]+1;
+
+					// ffwd to byte where we left of
+					$fh = fopen($file->getPathname(), 'r');
+					fseek($fh, $range[1]+1);
+
+					$response = $this->api->request(
+						$locationUri,
+						'PUT',
+						[
+							'Content-Length' => $remainingSize,
+							'Content-Range' => sprintf('bytes %s/%s', $range[1]+1, $file->getSize())
+						],
+						[
+							'body' => $fh
+						]
+					);
+
+					sleep(pow(2, $i));
+					$i++;
+				}
 			}
+		}
+
+		if ($response->getStatusCode() >= 300) {
+			throw new ApplicationException("Error on PUT file", null, [
+				'statusCode' => $response->getStatusCode(),
+				'reason' => $response->getReasonPhrase(),
+				'responseBody' => $response->getBody()
+			]);
 		}
 
 		return json_decode($response->getBody(), true);
