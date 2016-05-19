@@ -8,7 +8,7 @@
 
 namespace Keboola\Google\DriveWriterBundle\GoogleDrive;
 
-use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\BadResponseException;
 use GuzzleHttp\Psr7\Response;
 use Keboola\Csv\CsvFile;
 use Keboola\Google\ClientBundle\Google\RestApi as GoogleApi;
@@ -55,14 +55,67 @@ class RestApi
 
 	public function insertFile(File $file)
 	{
+		return $this->insertSimple($file);
+	}
+
+	private function insertSimple(File $file)
+	{
+		$title = $file->isOperationCreate()?$file->getTitle() . ' (' . date('Y-m-d H:i:s') . ')':$file->getTitle();
+
+		$metadataUrl = sprintf('%s', self::FILE_METADATA);
+
+		$body = [
+			'name' => $title
+		];
+
+		if ($file->getType() == File::TYPE_SHEET) {
+			$body['mimeType'] = 'application/vnd.google-apps.spreadsheet';
+		}
+
+		if ($file->getTargetFolder()) {
+			$metadataUrl .= '?addParents=' . $file->getTargetFolder();
+		}
+
+		$response = $this->api->request(
+			$metadataUrl,
+			'POST',
+			[
+				'Content-Type' => 'application/json',
+			],
+			[
+				'json' => $body
+			]
+		);
+
+		$responseJson = json_decode($response->getBody(), true);
+
+		$mediaUrl = sprintf('%s/%s?uploadType=media', self::FILE_UPLOAD, $responseJson['id']);
+
+		$response = $this->api->request(
+			$mediaUrl,
+			'PATCH',
+			[
+				'Content-Type' => 'text/csv',
+				'Content-Length' => $file->getSize()
+			],
+			[
+				'body' => \GuzzleHttp\Psr7\stream_for(fopen($file->getPathname(), 'r'))
+			]
+		);
+
+		return json_decode($response->getBody(), true);
+	}
+
+	private function insertResumable(File $file)
+	{
 		$convert = ($file->getType() == File::TYPE_SHEET)?'true':'false';
-        $title = $file->isOperationCreate()?$file->getTitle() . ' (' . date('Y-m-d H:i:s') . ')':$file->getTitle();
+		$title = $file->isOperationCreate()?$file->getTitle() . ' (' . date('Y-m-d H:i:s') . ')':$file->getTitle();
 
-		$url = sprintf('%s/%s?uploadType=resumable', self::FILE_UPLOAD, $file->getGoogleId());
+		$url = sprintf('%s?uploadType=resumable', self::FILE_UPLOAD);
 
-        $body = [
-            'name' => $title
-        ];
+		$body = [
+			'name' => $title
+		];
 
 		if ($convert) {
 			$body['mimeType'] = 'application/vnd.google-apps.spreadsheet';
@@ -135,10 +188,10 @@ class RestApi
 					'Content-Length' => $file->getSize()
 				],
 				[
-					'body' => fopen($file->getPathname(), 'r')
+					'body' => \GuzzleHttp\Psr7\stream_for(fopen($file->getPathname(), 'r'))
 				]
 			);
-		} catch (ClientException $e) {
+		} catch (BadResponseException $e) {
 			$response = $e->getResponse();
 			if ($response->getStatusCode() >= 300) {
 				// get upload status
@@ -170,7 +223,7 @@ class RestApi
 							'Content-Range' => sprintf('bytes %s/%s', $range[1]+1, $file->getSize())
 						],
 						[
-							'body' => $fh
+							'body' => \GuzzleHttp\Psr7\stream_for($fh)
 						]
 					);
 
