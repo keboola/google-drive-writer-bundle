@@ -557,7 +557,8 @@ class FunctionalTest extends AbstractFunctionalTest
                     'accessToken' => $this->encryptor->encrypt($this->accessToken),
                     'refreshToken' => $this->encryptor->encrypt($this->refreshToken)
                 ],
-                'query' => '+tags:tde'
+                'query' => '+tags:tde',
+				'targetFolder' => '0B8ceg4OWLR3ld0czTWxfd3RmQnc'
             ]
         ]);
 

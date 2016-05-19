@@ -72,10 +72,6 @@ class RestApi
 			$body['mimeType'] = 'application/vnd.google-apps.spreadsheet';
 		}
 
-		if ($file->getTargetFolder()) {
-			$metadataUrl .= '?addParents=' . $file->getTargetFolder();
-		}
-
 		$response = $this->api->request(
 			$metadataUrl,
 			'POST',
@@ -91,7 +87,7 @@ class RestApi
 
 		$mediaUrl = sprintf('%s/%s?uploadType=media', self::FILE_UPLOAD, $responseJson['id']);
 
-		$response = $this->api->request(
+		$this->api->request(
 			$mediaUrl,
 			'PATCH',
 			[
@@ -100,6 +96,30 @@ class RestApi
 			],
 			[
 				'body' => \GuzzleHttp\Psr7\stream_for(fopen($file->getPathname(), 'r'))
+			]
+		);
+
+		//move file to the right folder
+		$res = $this->getFile($responseJson['id']);
+		$metadataUrl = sprintf('%s/%s', self::FILE_METADATA, $res['id']);
+
+		if ($file->getTargetFolder()) {
+			$metadataUrl .= '?addParents=' . $file->getTargetFolder();
+
+			if (!empty($res['parents'])) {
+				$removeParents = implode(',', $res['parents']);
+				$metadataUrl .= '&removeParents=' . $removeParents;
+			}
+		}
+
+		$response = $this->api->request(
+			$metadataUrl,
+			'PATCH',
+			[
+				'Content-Type' => 'application/json',
+			],
+			[
+				'json' => $body
 			]
 		);
 
@@ -151,12 +171,12 @@ class RestApi
 		$url = sprintf('%s/%s?uploadType=resumable', self::FILE_UPLOAD, $file->getGoogleId());
 		$body = ['name' => $file->getTitle()];
 
-		if (!empty($res['parents'])) {
-			$removeParents = implode(',', $res['parents']);
-			$url .= '&removeParents=' . $removeParents;
-		}
 		if ($file->getTargetFolder()) {
 			$url .= '&addParents=' . $file->getTargetFolder();
+			if (!empty($res['parents'])) {
+				$removeParents = implode(',', $res['parents']);
+				$url .= '&removeParents=' . $removeParents;
+			}
 		}
 
 		$response = $this->api->request(
