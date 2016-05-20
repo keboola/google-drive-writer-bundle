@@ -121,11 +121,12 @@ class RestApiTest extends WebTestCase
 		$this->assertNotEmpty($response2);
 		$this->assertArrayHasKey('name', $response2);
 		$this->assertContains('MovedTestFile', $response2['name']);
+		$this->assertEquals($resFile['id'], $response2['id']);
 		$this->assertEquals('0B8ceg4OWLR3ld0czTWxfd3RmQnc', $response2['parents'][0]);
 
 		$file->setTitle('RenamedTestFile');
-		$this->restApi->updateFile($file);
-		$response3 = $this->restApi->getFile($resFile['id']);
+		$response3 = $this->restApi->updateFile($file);
+
 		$this->assertEquals($file->getGoogleId(), $response3['id']);
 		$this->assertContains($file->getTitle(), $response3['name']);
 

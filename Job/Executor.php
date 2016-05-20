@@ -106,8 +106,8 @@ class Executor extends BaseExecutor
                     ['q' => "trashed=false and name='" . $uploadedFile['name'] . "'"]
                 );
 
-                if (!empty($gdFiles['items'])) {
-                    $lastGdFile = array_shift($gdFiles['items']);
+                if (!empty($gdFiles['files'])) {
+                    $lastGdFile = array_shift($gdFiles['files']);
                     $file->setGoogleId($lastGdFile['id']);
                 }
 
