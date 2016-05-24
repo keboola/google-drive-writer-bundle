@@ -99,7 +99,6 @@ class RestApiTest extends WebTestCase
         $this->assertArrayHasKey('name', $response);
 		$this->assertArrayHasKey('parents', $response);
 		$this->assertArrayHasKey('webViewLink', $response);
-		$this->assertArrayHasKey('originalFilename', $response);
         $this->assertContains($file->getTitle(), $response['name']);
 
         // cleanup
