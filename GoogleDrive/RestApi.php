@@ -267,7 +267,7 @@ class RestApi
     public function getFile($id)
     {
 		$response = $this->api->request(
-			sprintf('%s/%s?fields=%s', self::FILE_METADATA, $id, urlencode('id,name,mimeType,parents,trashed')),
+			sprintf('%s/%s?fields=%s', self::FILE_METADATA, $id, urlencode('id,name,mimeType,parents,trashed,webViewLink')),
 			'GET'
 		);
         return json_decode($response->getBody(), true);

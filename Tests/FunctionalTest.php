@@ -414,7 +414,59 @@ class FunctionalTest extends AbstractFunctionalTest
 
     public function testGetRemoteFile()
     {
-        //@todo
+		$this->createConfig();
+		$this->createAccount();
+
+		$file = new File([
+			'id' => 0,
+			'title' => 'Test Sheet',
+			'tableId' => $this->tableId,
+			'targetFolder' => '0B8ceg4OWLR3lelQzMm9pcDEyNHc',
+			'type' => 'sheet'
+		]);
+
+		// add files to config
+		$this->configuration->addFile($this->accountId, $file->toArray());
+
+		// run
+		$job = $this->processJob($this->componentName . '/run');
+		$this->assertEquals('success', $job->getStatus());
+
+		$files = $this->configuration->getFiles($this->accountId);
+
+		/** @var File $file */
+		$file = array_shift($files);
+
+		// call the API
+		$this->httpClient->restart();
+		$this->httpClient->request(
+			'GET',
+			sprintf(
+				'%s/remote-file/%s/%s',
+				$this->componentName,
+				$this->accountId,
+				$file->getGoogleId()
+			)
+		);
+
+		$response = $this->httpClient->getResponse();
+		$body = json_decode($response->getContent(), true);
+
+		$this->assertEquals(200, $response->getStatusCode());
+		$this->assertArrayHasKey('id', $body);
+		$this->assertArrayHasKey('name', $body);
+		$this->assertArrayHasKey('title', $body);
+		$this->assertArrayHasKey('parents', $body);
+		$this->assertArrayHasKey('mimeType', $body);
+		$this->assertArrayHasKey('trashed', $body);
+		$this->assertArrayHasKey('alternateLink', $body);
+		$this->assertArrayHasKey('webViewLink', $body);
+
+		$this->assertNotEmpty($body['id']);
+		$this->assertNotEmpty($body['name']);
+		$this->assertNotEmpty($body['title']);
+		$this->assertNotEmpty($body['alternateLink']);
+		$this->assertNotEmpty($body['webViewLink']);
     }
 
 	/**
