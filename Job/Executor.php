@@ -117,6 +117,9 @@ class Executor extends BaseExecutor
                 $this->storageApi->addFileTag($uploadedFile['id'], 'wr-google-drive-processed');
             }
 
+            // delete temporary account
+            $this->configuration->removeAccount($account->getAccountId());
+
         } else {
             $fileFilter = null;
             if (isset($options['config'])) {

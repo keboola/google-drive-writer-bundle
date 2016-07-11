@@ -615,5 +615,13 @@ class FunctionalTest extends AbstractFunctionalTest
         ]);
 
         $this->assertEquals('success', $job->getStatus());
+
+		// test if external account was deleted
+		$accounts = $this->configuration->getAccounts();
+
+		/** @var Account $account */
+		foreach ($accounts as $account) {
+			$this->assertNotContains('external', $account->getAccountId());
+		}
     }
 }
