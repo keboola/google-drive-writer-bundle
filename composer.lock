@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "fcf55a21ea214db1ccc4b08ec31dbdfe",
+    "content-hash": "af58d80c6063814f3e80c7ad65f66418",
     "packages": [
         {
             "name": "aws/aws-sdk-php",
@@ -411,16 +411,16 @@
         },
         {
             "name": "doctrine/dbal",
-            "version": "v2.5.11",
+            "version": "v2.5.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/dbal.git",
-                "reference": "1b1effbddbdc0f40d1c8f849f44bcddac4f52a48"
+                "reference": "7b9e911f9d8b30d43b96853dab26898c710d8f44"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/1b1effbddbdc0f40d1c8f849f44bcddac4f52a48",
-                "reference": "1b1effbddbdc0f40d1c8f849f44bcddac4f52a48",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/7b9e911f9d8b30d43b96853dab26898c710d8f44",
+                "reference": "7b9e911f9d8b30d43b96853dab26898c710d8f44",
                 "shasum": ""
             },
             "require": {
@@ -478,7 +478,7 @@
                 "persistence",
                 "queryobject"
             ],
-            "time": "2017-02-04T21:20:13+00:00"
+            "time": "2017-02-08T12:53:47+00:00"
         },
         {
             "name": "doctrine/doctrine-bundle",
@@ -1481,6 +1481,52 @@
             "time": "2016-04-21T20:46:22+00:00"
         },
         {
+            "name": "keboola/debug-log-uploader",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/keboola/debug-log-uploader.git",
+                "reference": "7a1446dce794765aae673db55e81252c812492da"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/keboola/debug-log-uploader/zipball/7a1446dce794765aae673db55e81252c812492da",
+                "reference": "7a1446dce794765aae673db55e81252c812492da",
+                "shasum": ""
+            },
+            "require": {
+                "aws/aws-sdk-php": "~3.0",
+                "php": "~5.6|~7.0",
+                "symfony/filesystem": "~2.3|~3.0",
+                "zendframework/zend-json": "~3.0"
+            },
+            "require-dev": {
+                "codeclimate/php-test-reporter": "~0.3",
+                "phpunit/phpunit": "~5.3",
+                "squizlabs/php_codesniffer": "~2.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Keboola\\": "src/Keboola/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Keboola Debug Log Uploader",
+            "keywords": [
+                "debug",
+                "file",
+                "keboola",
+                "log",
+                "s3",
+                "uploader"
+            ],
+            "time": "2017-01-16T17:55:10+00:00"
+        },
+        {
             "name": "keboola/google-client-bundle",
             "version": "4.1.2",
             "target-dir": "Keboola/Google/ClientBundle",
@@ -1733,16 +1779,16 @@
         },
         {
             "name": "keboola/syrup",
-            "version": "3.1.6",
+            "version": "5.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/keboola/syrup.git",
-                "reference": "2e2e40690eec46002bbe5e89b7008949c7feb2eb"
+                "reference": "827d9305058df008c7c50a94ec0bbc7fe9156ba6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/keboola/syrup/zipball/2e2e40690eec46002bbe5e89b7008949c7feb2eb",
-                "reference": "2e2e40690eec46002bbe5e89b7008949c7feb2eb",
+                "url": "https://api.github.com/repos/keboola/syrup/zipball/827d9305058df008c7c50a94ec0bbc7fe9156ba6",
+                "reference": "827d9305058df008c7c50a94ec0bbc7fe9156ba6",
                 "shasum": ""
             },
             "require": {
@@ -1753,16 +1799,17 @@
                 "doctrine/orm": "~2.4",
                 "elasticsearch/elasticsearch": "~1.3",
                 "keboola/csv": "~1.1",
+                "keboola/debug-log-uploader": "^1.0",
                 "keboola/php-encryption": "~0.2",
                 "keboola/php-temp": "~0.1.0",
                 "keboola/php-utils": "~1.0.0",
                 "keboola/storage-api-client": "^4.0",
-                "php": "~5.6",
+                "php": "~5.6|^7.0",
                 "sensio/distribution-bundle": "~4.0.4",
                 "sensio/framework-extra-bundle": "~3.0",
                 "sensio/generator-bundle": "~2.3",
                 "symfony/assetic-bundle": "~2.3",
-                "symfony/monolog-bundle": "~2.6",
+                "symfony/monolog-bundle": "~2.11.1",
                 "symfony/swiftmailer-bundle": "~2.3",
                 "symfony/symfony": "^2.7"
             },
@@ -1797,7 +1844,7 @@
                 }
             ],
             "description": "Syrup",
-            "time": "2016-06-10T08:12:10+00:00"
+            "time": "2017-02-07T11:24:37+00:00"
         },
         {
             "name": "kriswallsmith/assetic",
@@ -2655,16 +2702,16 @@
         },
         {
             "name": "symfony/monolog-bundle",
-            "version": "v2.12.1",
+            "version": "2.11.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/monolog-bundle.git",
-                "reference": "b0146bdca7ba2a65f3bbe7010423c7393b29ec3f"
+                "reference": "0b427134a6868050fd9a95cc5eae3df85e5c759b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/monolog-bundle/zipball/b0146bdca7ba2a65f3bbe7010423c7393b29ec3f",
-                "reference": "b0146bdca7ba2a65f3bbe7010423c7393b29ec3f",
+                "url": "https://api.github.com/repos/symfony/monolog-bundle/zipball/0b427134a6868050fd9a95cc5eae3df85e5c759b",
+                "reference": "0b427134a6868050fd9a95cc5eae3df85e5c759b",
                 "shasum": ""
             },
             "require": {
@@ -2711,7 +2758,7 @@
                 "log",
                 "logging"
             ],
-            "time": "2017-01-02T19:04:26+00:00"
+            "time": "2016-10-19T07:54:05+00:00"
         },
         {
             "name": "symfony/polyfill-apcu",
@@ -3586,6 +3633,56 @@
                 "zf2"
             ],
             "time": "2016-12-19T21:47:12+00:00"
+        },
+        {
+            "name": "zendframework/zend-json",
+            "version": "3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zendframework/zend-json.git",
+                "reference": "f42a1588e75c2a3e338cd94c37906231e616daab"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zendframework/zend-json/zipball/f42a1588e75c2a3e338cd94c37906231e616daab",
+                "reference": "f42a1588e75c2a3e338cd94c37906231e616daab",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^5.5 || ^7.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.0",
+                "squizlabs/php_codesniffer": "^2.3",
+                "zendframework/zend-stdlib": "^2.7 || ^3.0"
+            },
+            "suggest": {
+                "zendframework/zend-json-server": "For implementing JSON-RPC servers",
+                "zendframework/zend-xml2json": "For converting XML documents to JSON"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.0-dev",
+                    "dev-develop": "3.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Zend\\Json\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "provides convenience methods for serializing native PHP to JSON and decoding JSON to native PHP",
+            "homepage": "https://github.com/zendframework/zend-json",
+            "keywords": [
+                "json",
+                "zf2"
+            ],
+            "time": "2016-04-01T02:34:00+00:00"
         }
     ],
     "packages-dev": [
