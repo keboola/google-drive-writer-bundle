@@ -9,6 +9,7 @@
 namespace Keboola\Google\DriveWriterBundle\GoogleDrive;
 
 use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Response;
 use Keboola\Csv\CsvFile;
 use Keboola\Google\ClientBundle\Google\RestApi as GoogleApi;
@@ -72,16 +73,16 @@ class RestApi
 			$body['mimeType'] = 'application/vnd.google-apps.spreadsheet';
 		}
 
-		$response = $this->api->request(
-			$metadataUrl,
-			'POST',
-			[
-				'Content-Type' => 'application/json',
-			],
-			[
-				'json' => $body
-			]
-		);
+        $response = $this->api->request(
+            $metadataUrl,
+            'POST',
+            [
+                'Content-Type' => 'application/json',
+            ],
+            [
+                'json' => $body
+            ]
+        );
 
 		$responseJson = json_decode($response->getBody(), true);
 

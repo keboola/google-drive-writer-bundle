@@ -43,10 +43,7 @@ class RestApiTest extends WebTestCase
 		$this->test3CsvPath = realpath(__DIR__ . '/../data/test3.csv');
 		$this->expectedFeedPath = realpath(__DIR__ . '/../data/test-feed.xml');
 
-		$accessToken = $this->encryptor->decrypt(ACCESS_TOKEN);
-		$refreshToken = $this->encryptor->decrypt(REFRESH_TOKEN);
-
-		$this->initApi($accessToken, $refreshToken);
+		$this->initApi(ACCESS_TOKEN, REFRESH_TOKEN);
 	}
 
 	protected function initApi($accessToken, $refreshToken)

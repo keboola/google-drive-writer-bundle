@@ -114,9 +114,9 @@ class OauthController extends BaseController
                 $this->container->get('session')->clear();
                 $referrer .= strstr($referrer, '?')?'&':'?';
                 $referrer .= 'access-token='
-                    . urlencode($this->container->get('syrup.encryptor')->encrypt($tokens['access_token']))
+                    . urlencode($encryptor->encrypt($tokens['access_token']))
                     . '&refresh-token='
-                    . urlencode($this->container->get('syrup.encryptor')->encrypt($tokens['refresh_token']))
+                    . urlencode($encryptor->encrypt($tokens['refresh_token']))
                     . '&email=' . $userData['email'];
 
                 return new RedirectResponse($referrer);

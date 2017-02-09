@@ -4,6 +4,8 @@ cache.properties
 composer.phar
 /vendor/
 Tests/config.php
+/Docker
+init-test-env.sh
 
 # osx noise
 .DS_Store

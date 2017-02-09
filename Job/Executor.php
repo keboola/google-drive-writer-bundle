@@ -47,7 +47,6 @@ class Executor extends BaseExecutor
 		$this->configuration->setStorageApi($this->storageApi);
 		$accounts = $this->configuration->getAccounts();
 		$options = $job->getParams();
-
         $status = [];
 
         if (isset($options['external'])) {

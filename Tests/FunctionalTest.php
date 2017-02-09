@@ -13,6 +13,7 @@ use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Google\DriveWriterBundle\GoogleDrive\RestApi;
 use Keboola\StorageApi\Client;
 use Keboola\StorageApi\Options\ListFilesOptions;
+use Keboola\Syrup\Service\ObjectEncryptor;
 use Symfony\Component\HttpFoundation\Response;
 use Keboola\Syrup\Encryption\Encryptor;
 use Keboola\Google\DriveWriterBundle\Writer\Configuration;
@@ -23,7 +24,7 @@ class FunctionalTest extends AbstractFunctionalTest
 	/** @var Configuration */
 	protected $configuration;
 
-	/** @var Encryptor */
+	/** @var ObjectEncryptor */
 	protected $encryptor;
 
 	protected $componentName = 'wr-google-drive';
@@ -51,7 +52,7 @@ class FunctionalTest extends AbstractFunctionalTest
 
 		$container = $this->httpClient->getContainer();
 
-		$this->encryptor = $container->get('syrup.encryptor');
+		$this->encryptor = $container->get('syrup.object_encryptor');
 		$this->restApi = $container->get('wr_google_drive.rest_api');
 
 		$this->testCsvPath = __DIR__ . '/data/test.csv';
@@ -101,8 +102,8 @@ class FunctionalTest extends AbstractFunctionalTest
 		$this->googleId = GOOGLE_ID;
 		$this->googleName = GOOGLE_NAME;
 		$this->email = EMAIL;
-		$this->accessToken = $this->encryptor->decrypt(ACCESS_TOKEN);
-		$this->refreshToken = $this->encryptor->decrypt(REFRESH_TOKEN);
+		$this->accessToken = ACCESS_TOKEN;
+		$this->refreshToken = REFRESH_TOKEN;
 		$this->tableId = TABLE_ID;
 	}
 
@@ -315,8 +316,9 @@ class FunctionalTest extends AbstractFunctionalTest
         );
 
         $response = $this->httpClient->getResponse();
+        $responseJson = json_decode($response->getContent(), true);
 
-        $resFile = array_shift(json_decode($response->getContent(), true));
+        $resFile = array_shift($responseJson);
 
         $this->assertEquals(200, $response->getStatusCode());
         $this->assertEquals('Test Sheet Update', $resFile['title']);

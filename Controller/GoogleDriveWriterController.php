@@ -107,7 +107,7 @@ class GoogleDriveWriterController extends ApiController
         }
 
         return $this->createJsonResponse([
-            'token' => $this->container->get('syrup.encryptor')->decrypt($params['token']),
+            'token' => $this->container->get('syrup.object_encryptor')->decrypt($params['token']),
             'apiKey' => $this->container->getParameter('google.browser-key')
         ]);
     }
