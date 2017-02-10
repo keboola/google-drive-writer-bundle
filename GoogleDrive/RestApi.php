@@ -57,7 +57,7 @@ class RestApi
 
 	public function insertFile(File $file)
 	{
-        return $this->insertSimple($file);
+        return $this->insertResumable($file);
 	}
 
 	private function insertSimple(File $file)
@@ -153,8 +153,7 @@ class RestApi
 			[
 				'Content-Type' => 'application/json; charset=UTF-8',
 				'Content-Length' => mb_strlen(serialize($body), '8bit'),
-				'X-Upload-Content-Type' => 'text/csv',
-				'X-Upload-Content-Length' => $file->getSize()
+				'X-Upload-Content-Type' => 'text/csv'
 			],
 			[
 				'json' => $body
@@ -561,9 +560,7 @@ class RestApi
             return $this->api->request($url, $method, $addHeaders, $options);
         } catch (ClientException $e) {
             $message = str_replace(['{', '}'], ['[',']'], $e->getMessage());
-            throw new UserException($message, $e, [
-                'response' => $e->getResponse()->getBody()->getContents()
-            ]);
+            throw new UserException($message, $e);
         }
     }
 }
