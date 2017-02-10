@@ -15,6 +15,7 @@ use Keboola\Csv\CsvFile;
 use Keboola\Google\ClientBundle\Google\RestApi as GoogleApi;
 use Keboola\Google\DriveWriterBundle\Entity\File;
 use Keboola\Syrup\Exception\ApplicationException;
+use Keboola\Syrup\Exception\UserException;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\Templating\EngineInterface;
 
@@ -50,13 +51,13 @@ class RestApi
 
 	public function listFiles($params = [])
 	{
-		$response = $this->api->request(self::FILE_METADATA, 'GET', [], ['query' => $params]);
+		$response = $this->request(self::FILE_METADATA, 'GET', [], ['query' => $params]);
 		return json_decode($response->getBody(), true);
 	}
 
 	public function insertFile(File $file)
 	{
-		return $this->insertSimple($file);
+        return $this->insertSimple($file);
 	}
 
 	private function insertSimple(File $file)
@@ -73,7 +74,7 @@ class RestApi
 			$body['mimeType'] = 'application/vnd.google-apps.spreadsheet';
 		}
 
-        $response = $this->api->request(
+        $response = $this->request(
             $metadataUrl,
             'POST',
             [
@@ -88,7 +89,7 @@ class RestApi
 
 		$mediaUrl = sprintf('%s/%s?uploadType=media', self::FILE_UPLOAD, $responseJson['id']);
 
-		$this->api->request(
+		$this->request(
 			$mediaUrl,
 			'PATCH',
 			[
@@ -113,7 +114,7 @@ class RestApi
 			}
 		}
 
-		$response = $this->api->request(
+		$response = $this->request(
 			$metadataUrl,
 			'PATCH',
 			[
@@ -146,7 +147,7 @@ class RestApi
 			$url .= '&addParents=' . $file->getTargetFolder();
 		}
 
-		$response = $this->api->request(
+		$response = $this->request(
 			$url,
 			'POST',
 			[
@@ -180,7 +181,7 @@ class RestApi
 			}
 		}
 
-		$response = $this->api->request(
+		$response = $this->request(
 			$url,
 			'PATCH',
 			[
@@ -201,7 +202,7 @@ class RestApi
 	protected function putFile(File $file, $locationUri)
 	{
 		try {
-			$response = $this->api->request(
+			$response = $this->request(
 				$locationUri,
 				'PUT',
 				[
@@ -216,7 +217,7 @@ class RestApi
 			$response = $e->getResponse();
 			if ($response->getStatusCode() >= 300) {
 				// get upload status
-				$response = $this->api->request(
+				$response = $this->request(
 					$locationUri,
 					'PUT',
 					[
@@ -236,7 +237,7 @@ class RestApi
 					$fh = fopen($file->getPathname(), 'r');
 					fseek($fh, $range[1]+1);
 
-					$response = $this->api->request(
+					$response = $this->request(
 						$locationUri,
 						'PUT',
 						[
@@ -267,7 +268,7 @@ class RestApi
 
     public function getFile($id)
     {
-		$response = $this->api->request(
+		$response = $this->request(
 			sprintf('%s/%s?fields=%s', self::FILE_METADATA, $id, urlencode('id,name,mimeType,parents,trashed,webViewLink,originalFilename')),
 			'GET'
 		);
@@ -276,7 +277,7 @@ class RestApi
 
 	public function deleteFile(File $file)
 	{
-		return $this->api->request(self::FILE_METADATA . '/' . $file->getGoogleId(), 'DELETE');
+		return $this->request(self::FILE_METADATA . '/' . $file->getGoogleId(), 'DELETE');
 	}
 
 
@@ -310,7 +311,7 @@ class RestApi
 
             // request is decomposed to several smaller requests, response is thrown away
             for ($i=0; $i <= intval($rowCnt/$limit); $i++) {
-                $response = $this->api->request(
+                $response = $this->request(
                     sprintf(self::SPREADSHEET_CELL_BATCH, $file->getGoogleId(), $file->getSheetId()),
                     'POST',
                     [
@@ -340,7 +341,7 @@ class RestApi
 
         } else {
 
-            $response = $this->api->request(
+            $response = $this->request(
                 sprintf(self::SPREADSHEET_CELL_BATCH, $file->getGoogleId(), $file->getSheetId()),
                 'POST',
                 [
@@ -386,7 +387,7 @@ class RestApi
             ]
         );
 
-        return $this->api->request(
+        return $this->request(
             sprintf(self::SPREADSHEET_WORKSHEETS . '/%s/private/full', $file->getGoogleId()),
             'POST',
             [
@@ -428,7 +429,7 @@ class RestApi
 		$entryXml = preg_replace('/\<gs\:rowCount\>.*\<\/gs\:rowCount\>/', '<gs:rowCount>'.$rowCount.'</gs:rowCount>', $entryXml);
 		$entryXml = "<?xml version='1.0' encoding='UTF-8'?>" . PHP_EOL . preg_replace('/\<entry.*\>\<id\>/', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'><id>", $entryXml);
 
-		return $this->api->request(
+		return $this->request(
 			sprintf(self::SPREADSHEET_WORKSHEETS . '/%s/private/full/%s', $file->getGoogleId(), $file->getSheetId()),
 			'PUT',
 			[
@@ -445,7 +446,7 @@ class RestApi
 
 	public function getWorksheetsFeed($fileId, $json = true)
 	{
-		$response = $this->api->request(
+		$response = $this->request(
 			self::SPREADSHEET_WORKSHEETS . '/' . $fileId . '/private/full' . ($json?'?alt=json':''),
 			'GET',
 			[
@@ -459,7 +460,7 @@ class RestApi
 
 	public function getWorksheets($fileId)
 	{
-		$response = json_decode($this->api->request(
+		$response = json_decode($this->request(
 			self::SPREADSHEET_WORKSHEETS . '/' . $fileId . '/private/full?alt=json' ,
 			'GET',
 			[
@@ -504,7 +505,7 @@ class RestApi
 
 	public function getCellsFeed(File $file)
 	{
-		return json_decode($this->api->request(
+		return json_decode($this->request(
 			sprintf(self::SPREADSHEET_CELL, $file->getGoogleId(), $file->getSheetId()) . '?alt=json',
 			'GET',
 			[
@@ -554,4 +555,15 @@ class RestApi
 		return $response;
 	}
 
+	private function request($url, $method = 'GET', $addHeaders = [], $options = [])
+    {
+        try {
+            return $this->api->request($url, $method, $addHeaders, $options);
+        } catch (ClientException $e) {
+            $message = str_replace(['{', '}'], ['[',']'], $e->getMessage());
+            throw new UserException($message, $e, [
+                'response' => $e->getResponse()->getBody()->getContents()
+            ]);
+        }
+    }
 }
