@@ -139,12 +139,12 @@ class RestApi
 			'name' => $title
 		];
 
+        if ($file->getTargetFolder()) {
+            $body['parents'] = [$file->getTargetFolder()];
+        }
+
 		if ($convert) {
 			$body['mimeType'] = 'application/vnd.google-apps.spreadsheet';
-		}
-
-		if ($file->getTargetFolder()) {
-			$url .= '&addParents=' . $file->getTargetFolder();
 		}
 
 		$response = $this->request(
