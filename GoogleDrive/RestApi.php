@@ -153,7 +153,7 @@ class RestApi
 			[
 				'Content-Type' => 'application/json; charset=UTF-8',
 				'Content-Length' => mb_strlen(serialize($body), '8bit'),
-				'X-Upload-Content-Type' => 'text/csv'
+//				'X-Upload-Content-Type' => 'text/csv'
 			],
 			[
 				'json' => $body
