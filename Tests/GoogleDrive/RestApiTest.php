@@ -63,7 +63,7 @@ class RestApiTest extends WebTestCase
 			'id' => 0,
 			'title' => 'Test Sheet',
 			'tableId' => 'empty',
-			'type' => 'sheet',
+			'type' => File::TYPE_SHEET,
 			'pathname' => $this->testCsvPath
 		]);
 	}
@@ -71,6 +71,7 @@ class RestApiTest extends WebTestCase
 	public function testInsertFile()
 	{
 		$file = $this->createTestFile();
+        $file->setType(File::TYPE_FILE);
 		$response = $this->restApi->insertFile($file);
 
 		$this->assertNotEmpty($response);
@@ -78,11 +79,29 @@ class RestApiTest extends WebTestCase
 		$this->assertEquals('drive#file', $response['kind']);
 		$this->assertArrayHasKey('name', $response);
 		$this->assertContains($file->getTitle(), $response['name']);
+        $this->assertEquals('application/octet-stream', $response['mimeType']);
 
 		// cleanup
 		$file->setGoogleId($response['id']);
 		$this->restApi->deleteFile($file);
 	}
+
+    public function testInsertSheet()
+    {
+        $file = $this->createTestFile();
+        $response = $this->restApi->insertFile($file);
+
+        $this->assertNotEmpty($response);
+        $this->assertArrayHasKey('kind', $response);
+        $this->assertEquals('drive#file', $response['kind']);
+        $this->assertArrayHasKey('name', $response);
+        $this->assertContains($file->getTitle(), $response['name']);
+        $this->assertEquals('application/vnd.google-apps.spreadsheet', $response['mimeType']);
+
+        // cleanup
+        $file->setGoogleId($response['id']);
+		$this->restApi->deleteFile($file);
+    }
 
     public function testGetFile()
     {

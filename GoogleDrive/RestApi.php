@@ -130,8 +130,7 @@ class RestApi
 
 	private function insertResumable(File $file)
 	{
-		$convert = ($file->getType() == File::TYPE_SHEET)?'true':'false';
-		$title = $file->isOperationCreate()?$file->getTitle() . ' (' . date('Y-m-d H:i:s') . ')':$file->getTitle();
+		$title = $file->isOperationCreate() ? $file->getTitle() . ' (' . date('Y-m-d H:i:s') . ')' : $file->getTitle();
 
 		$url = sprintf('%s?uploadType=resumable', self::FILE_UPLOAD);
 
@@ -143,18 +142,17 @@ class RestApi
             $body['parents'] = [$file->getTargetFolder()];
         }
 
-		if ($convert) {
-			$body['mimeType'] = 'application/vnd.google-apps.spreadsheet';
+        $addHeaders['Content-Type'] = 'application/json; charset=UTF-8';
+		if ($file->getType() == File::TYPE_SHEET) {
+		    $body['mimeType'] = 'application/vnd.google-apps.spreadsheet';
+            $addHeaders['X-Upload-Content-Type'] = 'text/csv';
+            $addHeaders['Content-Length'] = mb_strlen(serialize($body), '8bit');
 		}
 
 		$response = $this->request(
 			$url,
 			'POST',
-			[
-				'Content-Type' => 'application/json; charset=UTF-8',
-				'Content-Length' => mb_strlen(serialize($body), '8bit'),
-//				'X-Upload-Content-Type' => 'text/csv'
-			],
+			$addHeaders,
 			[
 				'json' => $body
 			]

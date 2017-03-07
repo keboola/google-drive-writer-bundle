@@ -454,6 +454,8 @@ class FunctionalTest extends AbstractFunctionalTest
 		$response = $this->httpClient->getResponse();
 		$body = json_decode($response->getContent(), true);
 
+        var_dump($body); die;
+
 		$this->assertEquals(200, $response->getStatusCode());
 		$this->assertArrayHasKey('id', $body);
 		$this->assertArrayHasKey('name', $body);
