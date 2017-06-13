@@ -186,6 +186,18 @@ class GoogleDriveWriterController extends ApiController
 		return $this->createJsonResponse($this->configuration->getAccounts(true));
 	}
 
+    public function getAccountDecryptAction($id)
+    {
+        $account = $this->configuration->getAccount($id);
+        if ($account == null) {
+            throw new UserException("Account '" . $id . "' not found");
+        }
+        $accountArr = $account->toArray();
+        $accountArr['refreshToken'] = $account->getRefreshToken();
+        $accountArr['accessToken'] = $account->getAccessToken();
+        return $this->createJsonResponse($accountArr);
+    }
+
 
 	/** Files */
 

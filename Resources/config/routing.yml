@@ -51,6 +51,11 @@ keboola_google_drive_writer_get_accounts:
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getAccounts, id: null }
     methods:  [GET]
 
+keboola_google_drive_writer_get_account_decrypt:
+    path: /account/{id}/decrypt
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getAccountDecrypt }
+    methods:  [GET]
+
 # Token
 keboola_google_drive_writer_get_access_token:
     path: /access-token/{accountId}
