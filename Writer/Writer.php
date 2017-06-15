@@ -85,6 +85,11 @@ class Writer
         return $this->googleDriveApi->getFile($fileGoogleId);
     }
 
+    public function getSheets($fileGoogleId)
+    {
+        return $this->googleDriveApi->getWorksheets($fileGoogleId);
+    }
+
 	public function refreshToken()
 	{
 		$response = $this->googleDriveApi->getApi()->refreshToken();

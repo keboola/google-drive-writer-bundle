@@ -97,3 +97,9 @@ keboola_google_drive_writer_delete_file:
     path: /files/{accountId}/{fileId}
     defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:deleteFile }
     methods:  [DELETE]
+
+# Sheets
+keboola_google_drive_writer_get_remote_sheets:
+    path: /remote-sheets/{accountId}/{fileGoogleId}
+    defaults: { _controller: KeboolaGoogleDriveWriterBundle:GoogleDriveWriter:getRemoteSheets }
+    methods:  [GET]
