@@ -291,11 +291,11 @@ class GoogleDriveWriterController extends ApiController
         return $this->createJsonResponse($file);
     }
 
-    public function getRemoteSheetsAction($accountId, $fileId)
+    public function getRemoteSheetsAction($accountId, $fileGoogleId)
     {
         $account = $this->configuration->getAccount($accountId);
 
-        return $this->createJsonResponse($this->getWriter($account)->getSheets($fileId));
+        return $this->createJsonResponse($this->getWriter($account)->getSheets($fileGoogleId));
     }
 
 	/**
